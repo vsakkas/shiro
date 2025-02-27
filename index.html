@@ -58,7 +58,14 @@
             text-align: left;
             vertical-align: top;
         }
-
+        textarea::placeholder {
+            color: #7f7e7e;
+            opacity: 1;
+        }
+        .light-mode textarea::placeholder {
+            color: #333;
+            opacity: 0.5;
+        }
         .icon {
             cursor: pointer;
             opacity: 0.5;
@@ -66,10 +73,12 @@
             font-size: 14px;
             color: #e0e0e0;
         }
-
+        .light-mode .icon {
+            color: #333;
+        }
         .icon:hover {
             opacity: 1;
-            color: #e0e0e0;
+
         }
     </style>
 </head>
@@ -139,7 +148,7 @@
             const day = now.getDate().toString().padStart(2, "0");
             const hours = now.getHours().toString().padStart(2, "0");
             const minutes = now.getMinutes().toString().padStart(2, "0");
-
+            
             return `shiro_${year}-${month}-${day}_${hours}-${minutes}.txt`;
         };
 
@@ -187,7 +196,7 @@
 
         const applyTheme = () => {
             const usingLightMode = document.body.classList.contains("light-mode");
-
+            
             document.body.style.background = usingLightMode ? "#f5f5f5" : "#1e1e1e";
             document.body.style.color = usingLightMode ? "#333" : "#e0e0e0";
             textarea.style.color = usingLightMode ? "#333" : "#e0e0e0";
@@ -197,7 +206,6 @@
 
             // Update all icons
             icons.forEach(icon => {
-                icon.style.color = usingLightMode ? "#333" : "#e0e0e0";
                 icon.style.opacity = buttonsHidden ? "0" : "0.5";
             });
 
