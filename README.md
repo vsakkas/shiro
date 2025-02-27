@@ -4,7 +4,7 @@ A clean, distraction-free text editor for the web.
 
 <p align="center">
   <a href="https://vsakkas.github.io/shiro/">
-    <img src="assets/screenshot_dark.png" alt="Shiro Text Editor" style="border-radius: 6px;">
+    <img src="assets/screenshot_dark.png" alt="Shiro Text Editor">
   </a>
   <i>Click the image to try Shiro</i>
 </p>
