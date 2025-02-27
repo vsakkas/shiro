@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiro</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: monospace;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            transition: background 0.5s ease-in-out;
+        }
+        textarea {
+            width: 65vw;
+            height: 65vh;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            outline: none;
+            resize: none;
+            font-size: 18px;
+            line-height: 1.6;
+            padding: 2.5vh;
+            user-select: none;
+            text-align: left;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="editor" placeholder="Start writing..."></textarea>
+
+    <script>
+        const textarea = document.getElementById("editor");
+
+        // Load saved text from localStorage
+        textarea.value = localStorage.getItem("shiroSavedText") || "";
+
+        // Save text to localStorage on input
+        textarea.addEventListener("input", () => {
+            localStorage.setItem("shiroSavedText", textarea.value);
+        });
+    </script>
+</body>
+</html>
