@@ -17,6 +17,25 @@
             height: 100vh;
             transition: background 0.5s ease-in-out;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 20px;
+        }
+
+        .left-controls, .right-controls {
+            display: flex;
+            gap: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         textarea {
             width: 65vw;
             height: 65vh;
@@ -32,21 +51,115 @@
             text-align: left;
             vertical-align: top;
         }
+
+        .icon {
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s, color 0.3s;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        .icon:hover {
+            opacity: 1;
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
-    <textarea id="editor" placeholder="Start writing..."></textarea>
+    <div class="header">
+        <div class="left-controls">
+            <span id="downloadButton" class="icon">Download</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <textarea id="editor" placeholder="Start writing..."></textarea>
+    </div>
 
     <script>
+        // DOM Elements
         const textarea = document.getElementById("editor");
+        const icons = document.querySelectorAll(".icon");
+        const downloadButton = document.getElementById("downloadButton");
 
-        // Load saved text from localStorage
-        textarea.value = localStorage.getItem("shiroSavedText") || "";
+        // State Variables
+        let buttonsHidden = false;
 
-        // Save text to localStorage on input
-        textarea.addEventListener("input", () => {
+        // Utility Functions
+        const saveText = () => {
             localStorage.setItem("shiroSavedText", textarea.value);
-        });
+        };
+
+        const loadText = () => {
+            textarea.value = localStorage.getItem("shiroSavedText") || "";
+        };
+
+        const hideIcons = () => {
+            icons.forEach(icon => icon.style.opacity = "0");
+            buttonsHidden = true;
+        };
+
+        const showIcons = () => {
+            icons.forEach(icon => icon.style.opacity = "0.5");
+            buttonsHidden = false;
+        };
+
+        const generateFilename = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-based
+            const day = now.getDate().toString().padStart(2, "0");
+            const hours = now.getHours().toString().padStart(2, "0");
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+
+            return `shiro_${year}-${month}-${day}_${hours}-${minutes}.txt`;
+        };
+
+        const downloadText = () => {
+            const filename = generateFilename();
+            const blob = new Blob([textarea.value], { type: "text/plain" });
+            const a = Object.assign(document.createElement("a"), {
+                href: URL.createObjectURL(blob),
+                download: filename
+            });
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+
+        // Event Handlers
+        const setupEventListeners = () => {
+            // Text area events
+            textarea.addEventListener("input", () => {
+                saveText();
+                hideIcons();
+            });
+
+            // Document events
+            document.addEventListener("mousemove", () => {
+                if (buttonsHidden) {
+                    showIcons();
+                }
+            });
+
+            // Button events
+            downloadButton.addEventListener("click", downloadText);
+
+            // Icon hover effects
+            icons.forEach(icon => {
+                icon.addEventListener("mouseenter", () => icon.style.opacity = "1");
+                icon.addEventListener("mouseleave", () => icon.style.opacity = buttonsHidden ? "0" : "0.5");
+            });
+        };
+
+        const initialize = () => {
+            loadText();
+            setupEventListeners();
+            textarea.focus(); // Focus on editor on load
+        };
+
+        // Start the application
+        window.onload = initialize;
     </script>
 </body>
 </html>
