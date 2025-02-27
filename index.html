@@ -217,7 +217,7 @@
         const updateWordCount = () => {
             const text = textarea.value.trim();
             const wordCount = text ? text.split(/\s+/).length : 0;
-            wordCountButton.textContent = `${wordCount} words`;
+            wordCountButton.textContent = `${wordCount} ${wordCount === 1 ? "word" : "words"}`;
         };
 
         // Event Handlers
