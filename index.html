@@ -72,6 +72,9 @@
             <span id="downloadButton" class="icon">Download</span>
             <span id="clearButton" class="icon">Clear</span>
         </div>
+        <div class="right-controls">
+            <span id="themeButton" class="icon">Light</span>
+        </div>
     </div>
 
     <div class="main-content">
@@ -84,6 +87,7 @@
         const icons = document.querySelectorAll(".icon");
         const downloadButton = document.getElementById("downloadButton");
         const clearButton = document.getElementById("clearButton");
+        const themeButton = document.getElementById("themeButton");
 
         // State Variables
         let buttonsHidden = false;
@@ -141,6 +145,31 @@
             }, 300);
         };
 
+        const applyTheme = () => {
+            const usingLightMode = document.body.classList.contains("light-mode");
+
+            document.body.style.background = usingLightMode ? "#f5f5f5" : "#1e1e1e";
+            document.body.style.color = usingLightMode ? "#333" : "#e0e0e0";
+            textarea.style.color = usingLightMode ? "#333" : "#e0e0e0";
+
+            // Update button text
+            themeButton.textContent = usingLightMode ? "Dark" : "Light";
+
+            // Update all icons
+            icons.forEach(icon => {
+                icon.style.color = usingLightMode ? "#333" : "#e0e0e0";
+                icon.style.opacity = buttonsHidden ? "0" : "0.5";
+            });
+
+            // Save theme preference
+            localStorage.setItem("shiroTheme", usingLightMode ? "light" : "dark");
+        };
+
+        const toggleTheme = () => {
+            document.body.classList.toggle("light-mode");
+            applyTheme();
+        };
+
         // Event Handlers
         const setupEventListeners = () => {
             // Text area events
@@ -159,6 +188,7 @@
             // Button events
             downloadButton.addEventListener("click", downloadText);
             clearButton.addEventListener("click", clearText);
+            themeButton.addEventListener("click", toggleTheme);
 
             // Icon hover effects
             icons.forEach(icon => {
@@ -167,7 +197,16 @@
             });
         };
 
+        // Initialization
+        const initializeTheme = () => {
+            if (localStorage.getItem("shiroTheme") === "light") {
+                document.body.classList.add("light-mode");
+            }
+            applyTheme();
+        };
+
         const initialize = () => {
+            initializeTheme();
             loadText();
             setupEventListeners();
             textarea.focus(); // Focus on editor on load
