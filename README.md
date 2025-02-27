@@ -23,6 +23,6 @@ A clean, distraction-free text editor for the web.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+##
 
 *"Shiro" (白) means "white" in Japanese, reflecting the clean, blank canvas philosophy of this editor.*
