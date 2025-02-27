@@ -70,6 +70,7 @@
     <div class="header">
         <div class="left-controls">
             <span id="downloadButton" class="icon">Download</span>
+            <span id="clearButton" class="icon">Clear</span>
         </div>
     </div>
 
@@ -82,6 +83,7 @@
         const textarea = document.getElementById("editor");
         const icons = document.querySelectorAll(".icon");
         const downloadButton = document.getElementById("downloadButton");
+        const clearButton = document.getElementById("clearButton");
 
         // State Variables
         let buttonsHidden = false;
@@ -127,6 +129,18 @@
             URL.revokeObjectURL(a.href);
         };
 
+        const clearText = () => {
+            textarea.style.transition = "opacity 0.3s";
+            textarea.style.opacity = "0";
+
+            // Fade out, then fade in text
+            setTimeout(() => {
+                textarea.value = "";
+                textarea.style.opacity = "1";
+                localStorage.removeItem("shiroSavedText");
+            }, 300);
+        };
+
         // Event Handlers
         const setupEventListeners = () => {
             // Text area events
@@ -144,6 +158,7 @@
 
             // Button events
             downloadButton.addEventListener("click", downloadText);
+            clearButton.addEventListener("click", clearText);
 
             // Icon hover effects
             icons.forEach(icon => {
