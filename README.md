@@ -11,7 +11,7 @@ A clean, distraction-free text editor for the web.
 
 ## Features
 
-- **Distraction-Free Writing** - Clean interface that fades away as you type
+- **Distraction-Free Writing** — Clean interface that fades away as you type
 - **Dark & Light Themes** — Easy on the eyes, day or night
 - **Auto-Save** — Your text stays safe in your browser
 - **Word Count** — Track your progress effortlessly
