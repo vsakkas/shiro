@@ -73,6 +73,7 @@
             <span id="clearButton" class="icon">Clear</span>
         </div>
         <div class="right-controls">
+            <span id="fullscreenButton" class="icon">Fullscreen</span>
             <span id="themeButton" class="icon">Light</span>
         </div>
     </div>
@@ -87,6 +88,7 @@
         const icons = document.querySelectorAll(".icon");
         const downloadButton = document.getElementById("downloadButton");
         const clearButton = document.getElementById("clearButton");
+        const fullscreenButton = document.getElementById("fullscreenButton");
         const themeButton = document.getElementById("themeButton");
 
         // State Variables
@@ -145,6 +147,24 @@
             }, 300);
         };
 
+        const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fullscreenButton.textContent = "Normal";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    fullscreenButton.textContent = "Fullscreen";
+                }
+            }
+        };
+
+        const updateFullscreenButton = () => {
+            if (!document.fullscreenElement) {
+                fullscreenButton.textContent = "Fullscreen";
+            }
+        };
+
         const applyTheme = () => {
             const usingLightMode = document.body.classList.contains("light-mode");
 
@@ -184,10 +204,12 @@
                     showIcons();
                 }
             });
+            document.addEventListener("fullscreenchange", updateFullscreenButton);
 
             // Button events
             downloadButton.addEventListener("click", downloadText);
             clearButton.addEventListener("click", clearText);
+            fullscreenButton.addEventListener("click", toggleFullscreen);
             themeButton.addEventListener("click", toggleTheme);
 
             // Icon hover effects
@@ -209,7 +231,7 @@
             initializeTheme();
             loadText();
             setupEventListeners();
-            textarea.focus(); // Focus on editor on load
+            textarea.focus(); // Focus on text area on load
         };
 
         // Start the application
