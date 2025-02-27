@@ -237,14 +237,30 @@
             });
             document.addEventListener("fullscreenchange", updateFullscreenButton);
 
-            // Button events
-            downloadButton.addEventListener("click", downloadText);
-            clearButton.addEventListener("click", clearText);
-            fullscreenButton.addEventListener("click", toggleFullscreen);
-            themeButton.addEventListener("click", toggleTheme);
-            aboutButton.addEventListener("click", openAboutPage);
+            // Button events - focus on text area after every action
+            downloadButton.addEventListener("click", () => {
+                downloadText();
+                textarea.focus();
+            });
+            clearButton.addEventListener("click", () => {
+                clearText();
+                textarea.focus();
+            });
+            fullscreenButton.addEventListener("click", () => {
+                toggleFullscreen();
+                textarea.focus();
+            });
+            themeButton.addEventListener("click", () => {
+                toggleTheme();
+                textarea.focus();
+            });
+            aboutButton.addEventListener("click", () => {
+                openAboutPage();
+                textarea.focus();
+            });
             wordCountButton.addEventListener("click", () => {
                 console.log("Word count clicked"); // Placeholder for word count click function
+                textarea.focus();
             });
 
             // Icon hover effects
