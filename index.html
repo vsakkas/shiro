@@ -39,7 +39,7 @@
         .footer {
             padding: 18px 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
         }
 
         textarea {
@@ -89,7 +89,12 @@
     </div>
 
     <div class="footer">
-        <span id="aboutButton" class="icon">About</span>
+        <div class="left-controls">
+            <span id="aboutButton" class="icon">About</span>
+        </div>
+        <div class="right-controls">
+            <span id="wordCountButton" class="icon">0 words</span>
+        </div>
     </div>
 
     <script>
@@ -101,6 +106,7 @@
         const fullscreenButton = document.getElementById("fullscreenButton");
         const themeButton = document.getElementById("themeButton");
         const aboutButton = document.getElementById("aboutButton");
+        const wordCountButton = document.getElementById("wordCountButton");
 
         // State Variables
         let buttonsHidden = false;
@@ -112,6 +118,7 @@
 
         const loadText = () => {
             textarea.value = localStorage.getItem("shiroSavedText") || "";
+            updateWordCount();
         };
 
         const hideIcons = () => {
@@ -155,6 +162,7 @@
                 textarea.value = "";
                 textarea.style.opacity = "1";
                 localStorage.removeItem("shiroSavedText");
+                updateWordCount();
             }, 300);
         };
 
@@ -205,6 +213,12 @@
             window.open("https://github.com/vsakkas/shiro", "_blank");
         };
 
+        const updateWordCount = () => {
+            const text = textarea.value.trim();
+            const wordCount = text ? text.split(/\s+/).length : 0;
+            wordCountButton.textContent = `${wordCount} words`;
+        };
+
         // Event Handlers
         const setupEventListeners = () => {
             // Text area events
@@ -217,6 +231,7 @@
             document.addEventListener("mousemove", () => {
                 if (buttonsHidden) {
                     showIcons();
+                    updateWordCount();
                 }
             });
             document.addEventListener("fullscreenchange", updateFullscreenButton);
@@ -227,6 +242,9 @@
             fullscreenButton.addEventListener("click", toggleFullscreen);
             themeButton.addEventListener("click", toggleTheme);
             aboutButton.addEventListener("click", openAboutPage);
+            wordCountButton.addEventListener("click", () => {
+                console.log("Word count clicked"); // Placeholder for word count click function
+            });
 
             // Icon hover effects
             icons.forEach(icon => {
