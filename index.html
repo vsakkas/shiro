@@ -236,6 +236,11 @@
                 }
             });
             document.addEventListener("fullscreenchange", updateFullscreenButton);
+            document.body.addEventListener("click", (event) => {
+                if (!event.target.closest(".icon") && event.target !== textarea) {
+                    textarea.focus(); // Focus on text area even when clicking outside of it
+                }
+            });
 
             // Button events - focus on text area after every action
             downloadButton.addEventListener("click", () => {
