@@ -7,22 +7,32 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e0e0e0' rx='16'/><text x='50%' y='45%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231e1e1e'>白</text></svg>">
     <title>Shiro</title>
+    <script>
+        // Set theme before CSS is applied to avoid screen flashing
+        (function () {
+            const savedTheme = localStorage.getItem('shiroTheme');
+            const theme = savedTheme ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <style>
         * {
             box-sizing: border-box;
         }
 
         :root {
-            --bg: #1e1e1e;
-            --text: #e0e0e0;
-            --placeholder: #7f7e7e;
+            --bg: #130f0c;
+            --text: #dfe4e2;
+            --placeholder: #7b807a;
             --transition: 0.3s ease;
+            --hover-accent: #b9391b;
         }
 
         [data-theme="light"] {
-            --bg: #f5f5f5;
-            --text: #333;
-            --placeholder: rgba(51, 51, 51, 0.5);
+            --bg: #dfe4e2;
+            --text: #130f0c;
+            --placeholder: #7b807a;
         }
 
         body {
@@ -52,12 +62,14 @@
             cursor: pointer;
             opacity: 0.5;
             font-size: 14px;
-            transition: opacity var(--transition);
+            transition: opacity var(--transition), color var(--transition);
             user-select: none;
+            color: var(--text);
         }
 
         .btn:hover {
             opacity: 1;
+            color: var(--hover-accent);
         }
 
         .controls.hidden .btn {
@@ -89,7 +101,7 @@
     </style>
 </head>
 
-<body data-theme="dark">
+<body>
     <div class="controls" id="top">
         <div>
             <span class="btn" data-action="download">Download</span>
@@ -119,7 +131,8 @@
             constructor() {
                 this.editor = document.getElementById('editor');
                 this.controls = document.querySelectorAll('.controls');
-                this.theme = localStorage.getItem('shiroTheme') || 'dark';
+                this.theme = localStorage.getItem('shiroTheme') ||
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 this.visible = true;
 
                 this.init();
@@ -199,7 +212,7 @@
             }
 
             setTheme(theme = this.theme) {
-                document.body.dataset.theme = theme;
+                document.documentElement.setAttribute('data-theme', theme);
                 document.querySelector('[data-action="theme"]').textContent = theme === 'dark' ? 'Light' : 'Dark';
                 localStorage.setItem('shiroTheme', theme);
                 this.theme = theme;
