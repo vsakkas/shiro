@@ -1,305 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e0e0e0' rx='16'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231e1e1e'>白</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e0e0e0' rx='16'/><text x='50%' y='45%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231e1e1e'>白</text></svg>">
     <title>Shiro</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #1e1e1e;
-            color: #e0e0e0;
-            font-family: monospace;
-            font-size: 18px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            transition: background 0.5s ease-in-out;
+        * {
+            box-sizing: border-box;
         }
 
-        .header {
+        :root {
+            --bg: #1e1e1e;
+            --text: #e0e0e0;
+            --placeholder: #7f7e7e;
+            --transition: 0.3s ease;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --text: #333;
+            --placeholder: rgba(51, 51, 51, 0.5);
+        }
+
+        body {
+            margin: 0;
+            font: 18px/1.6 monospace;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            transition: background var(--transition);
+        }
+
+        .controls {
             display: flex;
             justify-content: space-between;
             padding: 18px 20px;
+            gap: 20px;
         }
 
-        .left-controls, .right-controls {
+        .controls>div {
             display: flex;
             gap: 20px;
         }
 
-        .main-content {
-            flex: 1;
+        .btn {
+            cursor: pointer;
+            opacity: 0.5;
+            font-size: 14px;
+            transition: opacity var(--transition);
+            user-select: none;
+        }
+
+        .btn:hover {
+            opacity: 1;
+        }
+
+        .controls.hidden .btn {
+            opacity: 0;
+        }
+
+        main {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        .footer {
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        textarea {
-            width: 65vw;
-            height: 65vh;
+        #editor {
+            width: 70vw;
+            height: 70vh;
+            padding: 2.5vh;
+            font: inherit;
             background: transparent;
+            color: var(--text);
             border: none;
-            color: #e0e0e0;
             outline: none;
             resize: none;
-            font-size: 18px;
-            line-height: 1.6;
-            padding: 2.5vh;
-            user-select: none;
-            text-align: left;
-            vertical-align: top;
+            transition: opacity var(--transition);
         }
-        textarea::placeholder {
-            color: #7f7e7e;
-            opacity: 1;
-        }
-        .light-mode textarea::placeholder {
-            color: #333;
-            opacity: 0.5;
-        }
-        .icon {
-            cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.3s, color 0.3s;
-            font-size: 14px;
-            color: #e0e0e0;
-        }
-        .light-mode .icon {
-            color: #333;
-        }
-        .icon:hover {
-            opacity: 1;
 
+        #editor::placeholder {
+            color: var(--placeholder);
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div class="left-controls">
-            <span id="downloadButton" class="icon">Download</span>
-            <span id="clearButton" class="icon">Clear</span>
+
+<body data-theme="dark">
+    <div class="controls" id="top">
+        <div>
+            <span class="btn" data-action="download">Download</span>
+            <span class="btn" data-action="clear">Clear</span>
         </div>
-        <div class="right-controls">
-            <span id="fullscreenButton" class="icon">Fullscreen</span>
-            <span id="themeButton" class="icon">Light</span>
+        <div>
+            <span class="btn" data-action="fullscreen">Fullscreen</span>
+            <span class="btn" data-action="theme">Light</span>
         </div>
     </div>
 
-    <div class="main-content">
+    <main>
         <textarea id="editor" placeholder="Start writing..."></textarea>
-    </div>
+    </main>
 
-    <div class="footer">
-        <div class="left-controls">
-            <span id="aboutButton" class="icon">About</span>
+    <div class="controls" id="bottom">
+        <div>
+            <span class="btn" data-action="about">About</span>
         </div>
-        <div class="right-controls">
-            <span id="wordCountButton" class="icon">0 words</span>
+        <div>
+            <span class="btn" id="wordCount">0 words</span>
         </div>
     </div>
 
     <script>
-        // DOM Elements
-        const textarea = document.getElementById("editor");
-        const icons = document.querySelectorAll(".icon");
-        const downloadButton = document.getElementById("downloadButton");
-        const clearButton = document.getElementById("clearButton");
-        const fullscreenButton = document.getElementById("fullscreenButton");
-        const themeButton = document.getElementById("themeButton");
-        const aboutButton = document.getElementById("aboutButton");
-        const wordCountButton = document.getElementById("wordCountButton");
+        class Shiro {
+            constructor() {
+                this.editor = document.getElementById('editor');
+                this.controls = document.querySelectorAll('.controls');
+                this.theme = localStorage.getItem('shiroTheme') || 'dark';
+                this.visible = true;
 
-        // State Variables
-        let buttonsHidden = false;
+                this.init();
+            }
 
-        // Utility Functions
-        const saveText = () => {
-            localStorage.setItem("shiroSavedText", textarea.value);
-        };
+            init() {
+                this.loadText();
+                this.setTheme(this.theme);
+                this.bindEvents();
+                this.editor.focus();
+            }
 
-        const loadText = () => {
-            textarea.value = localStorage.getItem("shiroSavedText") || "";
-            updateWordCount();
-        };
+            bindEvents() {
+                // Editor events
+                this.editor.addEventListener('input', () => {
+                    this.saveText();
+                    this.updateWordCount();
+                    this.hide();
+                });
 
-        const hideIcons = () => {
-            icons.forEach(icon => icon.style.opacity = "0");
-            buttonsHidden = true;
-        };
+                // Control buttons - explicit binding
+                const actions = {
+                    download: () => this.download(),
+                    clear: () => this.clear(),
+                    fullscreen: () => this.fullscreen(),
+                    theme: () => this.toggleTheme(),
+                    about: () => this.about()
+                };
 
-        const showIcons = () => {
-            icons.forEach(icon => icon.style.opacity = "0.5");
-            buttonsHidden = false;
-        };
+                document.addEventListener('click', e => {
+                    const action = e.target.dataset.action;
+                    if (action && actions[action]) {
+                        actions[action]();
+                        this.editor.focus();
+                    } else if (e.target !== this.editor) {
+                        this.editor.focus();
+                    }
+                });
 
-        const generateFilename = () => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-based
-            const day = now.getDate().toString().padStart(2, "0");
-            const hours = now.getHours().toString().padStart(2, "0");
-            const minutes = now.getMinutes().toString().padStart(2, "0");
-            
-            return `shiro_${year}-${month}-${day}_${hours}-${minutes}.txt`;
-        };
+                // Show controls on mouse movement
+                document.addEventListener('mousemove', () => this.show());
 
-        const downloadText = () => {
-            const filename = generateFilename();
-            const blob = new Blob([textarea.value], { type: "text/plain" });
-            const a = Object.assign(document.createElement("a"), {
-                href: URL.createObjectURL(blob),
-                download: filename
-            });
-            a.click();
-            URL.revokeObjectURL(a.href);
-        };
+                // Fullscreen change
+                document.addEventListener('fullscreenchange', () => {
+                    const btn = document.querySelector('[data-action="fullscreen"]');
+                    btn.textContent = document.fullscreenElement ? 'Normal' : 'Fullscreen';
+                });
+            }
 
-        const clearText = () => {
-            textarea.style.transition = "opacity 0.3s";
-            textarea.style.opacity = "0";
+            saveText() {
+                localStorage.setItem('shiroSavedText', this.editor.value);
+            }
 
-            // Fade out, then fade in text
-            setTimeout(() => {
-                textarea.value = "";
-                textarea.style.opacity = "1";
-                localStorage.removeItem("shiroSavedText");
-                updateWordCount();
-            }, 300);
-        };
+            loadText() {
+                this.editor.value = localStorage.getItem('shiroSavedText') || '';
+                this.updateWordCount();
+            }
 
-        const toggleFullscreen = () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                fullscreenButton.textContent = "Normal";
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                    fullscreenButton.textContent = "Fullscreen";
+            updateWordCount() {
+                const words = this.editor.value.trim().split(/\s+/).filter(Boolean).length;
+                document.getElementById('wordCount').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+            }
+
+            hide() {
+                if (this.visible) {
+                    this.controls.forEach(c => c.classList.add('hidden'));
+                    this.visible = false;
                 }
             }
-        };
 
-        const updateFullscreenButton = () => {
-            if (!document.fullscreenElement) {
-                fullscreenButton.textContent = "Fullscreen";
-            }
-        };
-
-        const applyTheme = () => {
-            const usingLightMode = document.body.classList.contains("light-mode");
-            
-            document.body.style.background = usingLightMode ? "#f5f5f5" : "#1e1e1e";
-            document.body.style.color = usingLightMode ? "#333" : "#e0e0e0";
-            textarea.style.color = usingLightMode ? "#333" : "#e0e0e0";
-
-            // Update button text
-            themeButton.textContent = usingLightMode ? "Dark" : "Light";
-
-            // Update all icons
-            icons.forEach(icon => {
-                icon.style.opacity = buttonsHidden ? "0" : "0.5";
-            });
-
-            // Save theme preference
-            localStorage.setItem("shiroTheme", usingLightMode ? "light" : "dark");
-        };
-
-        const toggleTheme = () => {
-            document.body.classList.toggle("light-mode");
-            applyTheme();
-        };
-
-        const openAboutPage = () => {
-            window.open("https://github.com/vsakkas/shiro", "_blank");
-        };
-
-        const updateWordCount = () => {
-            const text = textarea.value.trim();
-            const wordCount = text ? text.split(/\s+/).length : 0;
-            wordCountButton.textContent = `${wordCount} ${wordCount === 1 ? "word" : "words"}`;
-        };
-
-        // Event Handlers
-        const setupEventListeners = () => {
-            // Text area events
-            textarea.addEventListener("input", () => {
-                saveText();
-                hideIcons();
-            });
-
-            // Document events
-            document.addEventListener("mousemove", () => {
-                if (buttonsHidden) {
-                    showIcons();
-                    updateWordCount();
+            show() {
+                if (!this.visible) {
+                    this.controls.forEach(c => c.classList.remove('hidden'));
+                    this.visible = true;
+                    this.updateWordCount();
                 }
-            });
-            document.addEventListener("fullscreenchange", updateFullscreenButton);
-            document.body.addEventListener("click", (event) => {
-                if (!event.target.closest(".icon") && event.target !== textarea) {
-                    textarea.focus(); // Focus on text area even when clicking outside of it
-                }
-            });
-
-            // Button events - focus on text area after every action
-            downloadButton.addEventListener("click", () => {
-                downloadText();
-                textarea.focus();
-            });
-            clearButton.addEventListener("click", () => {
-                clearText();
-                textarea.focus();
-            });
-            fullscreenButton.addEventListener("click", () => {
-                toggleFullscreen();
-                textarea.focus();
-            });
-            themeButton.addEventListener("click", () => {
-                toggleTheme();
-                textarea.focus();
-            });
-            aboutButton.addEventListener("click", () => {
-                openAboutPage();
-                textarea.focus();
-            });
-            wordCountButton.addEventListener("click", () => {
-                console.log("Word count clicked"); // Placeholder for word count click function
-                textarea.focus();
-            });
-
-            // Icon hover effects
-            icons.forEach(icon => {
-                icon.addEventListener("mouseenter", () => icon.style.opacity = "1");
-                icon.addEventListener("mouseleave", () => icon.style.opacity = buttonsHidden ? "0" : "0.5");
-            });
-        };
-
-        // Initialization
-        const initializeTheme = () => {
-            if (localStorage.getItem("shiroTheme") === "light") {
-                document.body.classList.add("light-mode");
             }
-            applyTheme();
-        };
 
-        const initialize = () => {
-            initializeTheme();
-            loadText();
-            setupEventListeners();
-            textarea.focus(); // Focus on text area on load
-        };
+            setTheme(theme = this.theme) {
+                document.body.dataset.theme = theme;
+                document.querySelector('[data-action="theme"]').textContent = theme === 'dark' ? 'Light' : 'Dark';
+                localStorage.setItem('shiroTheme', theme);
+                this.theme = theme;
+            }
 
-        // Start the application
-        window.onload = initialize;
+            // Actions
+            download() {
+                const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_' : '-');
+                const blob = new Blob([this.editor.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+
+                Object.assign(document.createElement('a'), {
+                    href: url,
+                    download: `shiro_${timestamp}.txt`
+                }).click();
+
+                URL.revokeObjectURL(url);
+            }
+
+            clear() {
+                this.editor.style.opacity = '0';
+                setTimeout(() => {
+                    this.editor.value = '';
+                    this.editor.style.opacity = '1';
+                    localStorage.removeItem('shiroSavedText');
+                    this.updateWordCount();
+                }, 300);
+            }
+
+            fullscreen() {
+                document.fullscreenElement
+                    ? document.exitFullscreen?.()
+                    : document.documentElement.requestFullscreen?.();
+            }
+
+            toggleTheme() {
+                const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+                this.setTheme(newTheme);
+            }
+
+            about() {
+                window.open('https://github.com/vsakkas/shiro', '_blank');
+            }
+        }
+
+        // Start Shiro
+        new Shiro();
     </script>
 </body>
 </html>
