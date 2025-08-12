@@ -6,7 +6,7 @@ A clean, distraction-free text editor for the web.
   <a href="https://vsakkas.github.io/shiro/">
     <img src="assets/screenshot_light.png" alt="Shiro Text Editor">
   </a>
-  <a href="https://vsakkas.github.io/shiro/"><i>Start writing</i></a>
+  <a href="https://vsakkas.github.io/shiro/"><b><i>Start writing</i><b></a>
 </p>
 
 ## Features
