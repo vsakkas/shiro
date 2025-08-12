@@ -17,7 +17,7 @@ A clean, distraction-free text editor for the web.
 - **Know your progress** – Built-in word count.
 - **Take your words with you** – Export locally anytime.
 - **Go all in** – Full-screen mode.
-- **Respect your privacy** – No accounts, no tracking, no cookies.
+- **Respects your privacy** – No accounts, no tracking, no cookies.
 
 ## License
 
