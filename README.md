@@ -6,7 +6,7 @@ A clean, distraction-free text editor for the web.
   <a href="https://vsakkas.github.io/shiro/">
     <img src="assets/screenshot_light.png" alt="Shiro Text Editor">
   </a>
-  <a href="https://vsakkas.github.io/shiro/" style="text-decoration: none;"><b>Try it now</b></a>
+  <a href="https://vsakkas.github.io/shiro/"><b>Try it now</b></a>
 </p>
 
 ## Features
@@ -21,4 +21,4 @@ A clean, distraction-free text editor for the web.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
