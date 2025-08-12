@@ -3,10 +3,10 @@
 A clean, distraction-free text editor for the web.
 
 <p align="center">
-  <a href="https://vsakkas.github.io/shiro/"><b>Try it now</b></a><br><br>
   <a href="https://vsakkas.github.io/shiro/">
     <img src="assets/screenshot_light.png" alt="Shiro Text Editor">
   </a>
+  <a href="https://vsakkas.github.io/shiro/" style="text-decoration: none;"><b>Try it now</b></a>
 </p>
 
 ## Features
@@ -22,7 +22,3 @@ A clean, distraction-free text editor for the web.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-##
-
-*"Shiro" (白) means "white" in Japanese, reflecting the clean, blank canvas philosophy of this editor.*
