@@ -157,7 +157,9 @@
                 // Editor events
                 this.editor.addEventListener('input', () => {
                     this.saveText();
+                    if (this.visible) {
                     this.updateCount();
+                    }
                     this.hide();
                 });
 
