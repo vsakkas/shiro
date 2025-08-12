@@ -3,21 +3,21 @@
 A clean, distraction-free text editor for the web.
 
 <p align="center">
+  <a href="https://vsakkas.github.io/shiro/"><b>Try it now</b></a><br><br>
   <a href="https://vsakkas.github.io/shiro/">
     <img src="assets/screenshot_light.png" alt="Shiro Text Editor">
   </a>
-  <i>Click the image to try Shiro</i>
 </p>
 
 ## Features
 
-- **Distraction-Free Writing** - Clean interface that fades away as you type
-- **Dark & Light Themes** - Easy on the eyes, day or night
-- **Auto-Save** - Your text stays safe in your browser
-- **Word Count** - Track your progress effortlessly
-- **Export to File** - Save your work as a plain text file
-- **Full-Screen Mode** - Immerse yourself completely
-- **Privacy First** - No tracking, no cookies, no accounts
+- **Focus on your writing** – The interface fades away as you type.
+- **Comfort for your eyes** – Light and dark themes for any time of day.
+- **Never lose your work** – Auto-save in your browser.
+- **Know your progress** – Built-in word count.
+- **Take your words with you** – Export locally anytime.
+- **Go all in** – Full-screen mode.
+- **Respect your privacy** – No accounts, no tracking, no cookies.
 
 ## License
 
