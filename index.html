@@ -127,7 +127,7 @@
             <span class="btn" data-action="about">About</span>
         </div>
         <div>
-            <span class="btn" id="wordCount">0 words</span>
+            <span class="btn" id="count" data-action="count">0 words</span>
         </div>
     </div>
 
@@ -136,8 +136,10 @@
             constructor() {
                 this.editor = document.getElementById('editor');
                 this.controls = document.querySelectorAll('.controls');
+                this.countDisplay = document.getElementById('count');
                 this.theme = localStorage.getItem('shiroTheme') ||
                     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                this.countMode = localStorage.getItem('shiroCountMode') || 'words'; // 'words' or 'characters'
                 this.visible = true;
 
                 this.init();
@@ -147,6 +149,7 @@
                 this.loadText();
                 this.setTheme(this.theme);
                 this.bindEvents();
+                this.updateCount();
                 this.editor.focus();
             }
 
@@ -154,7 +157,9 @@
                 // Editor events
                 this.editor.addEventListener('input', () => {
                     this.saveText();
-                    this.updateWordCount();
+                    if (this.visible) {
+                        this.updateCount();
+                    }
                     this.hide();
                 });
 
@@ -164,7 +169,8 @@
                     clear: () => this.clear(),
                     fullscreen: () => this.fullscreen(),
                     theme: () => this.toggleTheme(),
-                    about: () => this.about()
+                    about: () => this.about(),
+                    count: () => this.toggleCountMode()
                 };
 
                 document.addEventListener('click', e => {
@@ -193,12 +199,28 @@
 
             loadText() {
                 this.editor.value = localStorage.getItem('shiroSavedText') || '';
-                this.updateWordCount();
+                this.updateCount();
             }
 
-            updateWordCount() {
-                const words = this.editor.value.trim().split(/\s+/).filter(Boolean).length;
-                document.getElementById('wordCount').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+            updateCount() {
+                const text = this.editor.value;
+                let count, label;
+
+                if (this.countMode === 'words') {
+                    count = text.trim().split(/\s+/).filter(Boolean).length;
+                    label = `word${count !== 1 ? 's' : ''}`;
+                } else {
+                    count = text.length;
+                    label = `character${count !== 1 ? 's' : ''}`;
+                }
+
+                this.countDisplay.textContent = `${count} ${label}`;
+            }
+
+            toggleCountMode() {
+                this.countMode = this.countMode === 'words' ? 'characters' : 'words';
+                localStorage.setItem('shiroCountMode', this.countMode);
+                this.updateCount();
             }
 
             hide() {
@@ -212,7 +234,7 @@
                 if (!this.visible) {
                     this.controls.forEach(c => c.classList.remove('hidden'));
                     this.visible = true;
-                    this.updateWordCount();
+                    this.updateCount();
                 }
             }
 
@@ -243,7 +265,7 @@
                     this.editor.value = '';
                     this.editor.style.opacity = '1';
                     localStorage.removeItem('shiroSavedText');
-                    this.updateWordCount();
+                    this.updateCount();
                 }, 300);
             }
 
