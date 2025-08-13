@@ -181,6 +181,11 @@
                     }
                 });
 
+                // Always focus on editor on keydown
+                window.addEventListener('keydown', () => {
+                    this.editor.focus();
+                });
+
                 // Control buttons
                 const actions = {
                     download: () => this.download(),
