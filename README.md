@@ -1,6 +1,6 @@
 # Shiro「白」
 
-A clean, distraction-free text editor for the web.
+A clean, distraction-free text editor for focused writing.
 
 <p align="center">
   <a href="https://vsakkas.github.io/shiro/">
