@@ -139,7 +139,7 @@
                 this.countDisplay = document.getElementById('count');
                 this.theme = localStorage.getItem('shiroTheme') ||
                     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                this.countMode = localStorage.getItem('shiroCountMode') || 'words'; // 'words' or 'characters'
+                this.countMode = localStorage.getItem('shiroCountMode') || 'words';
                 this.visible = true;
 
                 this.init();
@@ -163,10 +163,28 @@
                     this.hide();
                 });
 
-                // Control buttons - explicit binding
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                    const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+                    if (modKey && e.key === 's') {
+                        e.preventDefault();
+                        this.download();
+                        return;
+                    }
+
+                    if (modKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.clearWithConfirmation();
+                        return;
+                    }
+                });
+
+                // Control buttons
                 const actions = {
                     download: () => this.download(),
-                    clear: () => this.clear(),
+                    clear: () => this.clearWithConfirmation(),
                     fullscreen: () => this.fullscreen(),
                     theme: () => this.toggleTheme(),
                     about: () => this.about(),
@@ -257,6 +275,16 @@
                 }).click();
 
                 URL.revokeObjectURL(url);
+            }
+
+            clearWithConfirmation() {
+                if (this.editor.value.trim()) {
+                    if (confirm('Are you sure you want to clear all text?')) {
+                        this.clear();
+                    }
+                } else {
+                    this.clear();
+                }
             }
 
             clear() {
