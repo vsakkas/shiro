@@ -215,6 +215,11 @@
                     const btn = document.querySelector('[data-action="fullscreen"]');
                     btn.textContent = document.fullscreenElement ? 'Normal' : 'Fullscreen';
                 });
+
+                // Save cursor position when it moves
+                this.editor.addEventListener('selectionchange', () => {
+                    this.saveCursorPosition();
+                });
             }
 
             saveText() {
@@ -223,7 +228,23 @@
 
             loadText() {
                 this.editor.value = localStorage.getItem('shiroSavedText') || '';
+                this.loadCursorPosition();
                 this.updateCount();
+            }
+
+            saveCursorPosition() {
+                localStorage.setItem('shiroCursorPosition', this.editor.selectionStart);
+            }
+
+            loadCursorPosition() {
+                const saved = localStorage.getItem('shiroCursorPosition');
+                if (saved) {
+                    const position = parseInt(saved);
+                    setTimeout(() => {
+                        this.editor.setSelectionRange(position, position);
+                        this.editor.focus();
+                    }, 0);
+                }
             }
 
             updateCount() {
