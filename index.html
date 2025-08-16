@@ -84,9 +84,10 @@
         }
 
         #editor {
-            width: 70vw;
+            width: 100%;
             height: 70vh;
-            padding: 2.5vh;
+            padding-inline: 25vh;
+            padding-block: 2.5vh;
             font: inherit;
             background: transparent;
             color: var(--text);
@@ -95,6 +96,7 @@
             resize: none;
             transition: opacity var(--transition);
             tab-size: 4;
+            box-sizing: border-box;
         }
 
         #editor::placeholder {
