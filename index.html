@@ -94,6 +94,7 @@
             outline: none;
             resize: none;
             transition: opacity var(--transition);
+            tab-size: 4;
         }
 
         #editor::placeholder {
@@ -168,6 +169,12 @@
                 document.addEventListener('keydown', (e) => {
                     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
                     const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+                    if (e.key === 'Tab' && e.target === this.editor) {
+                        e.preventDefault();
+                        document.execCommand('insertText', false, '\t');
+                        return;
+                    }
 
                     if (modKey && e.key === 's') {
                         e.preventDefault();
