@@ -176,15 +176,31 @@
                         return;
                     }
 
+                    // Save text: Ctrl+S (Windows/Linux) or Cmd+S (Mac)
                     if (modKey && e.key === 's') {
                         e.preventDefault();
                         this.download();
                         return;
                     }
 
+                    // Clear text: Ctrl+K (Windows/Linux) or Cmd+K (Mac)
                     if (modKey && e.key === 'k') {
                         e.preventDefault();
                         this.clearWithConfirmation();
+                        return;
+                    }
+
+                    // Theme toggle: Shift+Ctrl+T (Windows/Linux) or Shift+Cmd+T (Mac)
+                    if (modKey && e.shiftKey && e.key === 'T') {
+                        e.preventDefault();
+                        this.toggleTheme();
+                        return;
+                    }
+
+                    // Fullscreen toggle: Shift+Ctrl+F (Windows/Linux) or Shift+Cmd+F (Mac)
+                    if (modKey && e.shiftKey && e.key === 'F') {
+                        e.preventDefault();
+                        this.fullscreen();
                         return;
                     }
                 });
