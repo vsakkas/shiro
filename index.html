@@ -160,6 +160,9 @@
                 this.theme = localStorage.getItem(SHIRO_THEME) ||
                     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 this.countMode = localStorage.getItem(SHIRO_COUNT_MODE) || 'words';
+                this.segmenter = typeof Intl.Segmenter === "function"
+                    ? new Intl.Segmenter(navigator.language, { granularity: "word" })
+                    : null;
                 this.visible = true;
 
                 this.init();
@@ -288,12 +291,26 @@
                 }
             }
 
+            getWordsCount(content) {
+                if (!content.trim()) return 0;
+
+                if (this.segmenter && content.length < 300_000) {
+                    let count = 0;
+                    for (const segment of this.segmenter.segment(content)) {
+                        if (segment.isWordLike) count++;
+                    }
+                    return count;
+                }
+                // Fallback for very old browsers or very large content
+                return content.trim().split(/\s+/).filter(Boolean).length;
+            }
+
             updateCount() {
                 const text = this.editor.value;
                 let count, label;
 
                 if (this.countMode === 'words') {
-                    count = text.trim().split(/\s+/).filter(Boolean).length;
+                    count = this.getWordsCount(text);
                     label = `word${count !== 1 ? 's' : ''}`;
                 } else {
                     count = text.length;
