@@ -47,6 +47,18 @@
             transition: background var(--transition);
         }
 
+        body,
+        #editor,
+        .btn,
+        #editor::placeholder {
+            transition: background var(--transition), color var(--transition);
+        }
+
+        #count,
+        [data-action="theme"] {
+            transition: opacity var(--transition);
+        }
+
         .controls {
             display: flex;
             justify-content: space-between;
@@ -61,15 +73,13 @@
 
         .btn {
             cursor: pointer;
-            opacity: 0.5;
             font-size: 14px;
             transition: opacity var(--transition), color var(--transition);
             user-select: none;
-            color: var(--text);
+            color: rgb(from var(--text) r g b / 0.6);
         }
 
         .btn:hover {
-            opacity: 1;
             color: var(--hover-accent);
         }
 
@@ -294,9 +304,13 @@
             }
 
             toggleCountMode() {
-                this.countMode = this.countMode === 'words' ? 'characters' : 'words';
-                localStorage.setItem(SHIRO_COUNT_MODE, this.countMode);
-                this.updateCount();
+                this.countDisplay.style.opacity = '0';
+                setTimeout(() => {
+                    this.countMode = this.countMode === 'words' ? 'characters' : 'words';
+                    localStorage.setItem(SHIRO_COUNT_MODE, this.countMode);
+                    this.updateCount();
+                    this.countDisplay.style.opacity = '1';
+                }, 150);
             }
 
             hide() {
@@ -315,8 +329,13 @@
             }
 
             setTheme(theme = this.theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                document.querySelector('[data-action="theme"]').textContent = theme === 'dark' ? 'Light' : 'Dark';
+                const button = document.querySelector('[data-action="theme"]');
+                button.style.opacity = '0';
+                setTimeout(() => {
+                    document.documentElement.setAttribute('data-theme', theme);
+                    button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+                    button.style.opacity = '1';
+                }, 150);
                 localStorage.setItem(SHIRO_THEME, theme);
                 this.theme = theme;
             }
