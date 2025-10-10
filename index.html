@@ -287,9 +287,15 @@
                 const saved = localStorage.getItem(SHIRO_CURSOR_POSITION);
                 if (saved) {
                     const position = parseInt(saved);
+                    const editor = this.editor;
                     setTimeout(() => {
-                        this.editor.setSelectionRange(position, position);
-                        this.editor.focus();
+                        editor.setSelectionRange(position, position);
+                        editor.focus({ preventScroll: true });
+
+                        // Fix scroll jumping when cursor is on the first line
+                        const lineNumber = editor.value.substring(0, position).split('\n').length - 1;
+                        if (lineNumber === 0) editor.scrollTop = 0;
+
                     }, 0);
                 }
             }
