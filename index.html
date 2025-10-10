@@ -299,9 +299,15 @@
             }
 
             loadText() {
-                this.editor.value = localStorage.getItem(SHIRO_SAVED_TEXT) || '';
-                this.loadCursorPosition();
-                this.updateCount();
+                // Hide editor until text is loaded to prevent flickering
+                const editor = this.editor;
+                editor.style.visibility = 'hidden';
+                editor.value = localStorage.getItem(SHIRO_SAVED_TEXT) || '';
+                requestAnimationFrame(() => {
+                    this.loadCursorPosition();
+                    editor.style.visibility = 'visible';
+                    this.updateCount();
+                });
             }
 
             saveCursorPosition() {
@@ -313,15 +319,14 @@
                 if (saved) {
                     const position = parseInt(saved);
                     const editor = this.editor;
-                    setTimeout(() => {
+                    requestAnimationFrame(() => {
                         editor.setSelectionRange(position, position);
                         editor.focus({ preventScroll: true });
 
                         // Fix scroll jumping when cursor is on the first line
                         const lineNumber = editor.value.substring(0, position).split('\n').length - 1;
                         if (lineNumber === 0) editor.scrollTop = 0;
-
-                    }, 0);
+                    });
                 }
             }
 
