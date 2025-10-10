@@ -200,6 +200,31 @@
                         return;
                     }
 
+                    // Open file: Ctrl+O (Windows/Linux) or Cmd+O (Mac)
+                    if (modKey && e.key === 'o') {
+                        e.preventDefault();
+                        if (!this.editor.value.trim()) {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = '.txt';
+                            input.onchange = (event) => {
+                                const file = event.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                        this.editor.value = reader.result;
+                                        this.saveText();
+                                        this.updateCount();
+                                    };
+                                    reader.readAsText(file);
+                                }
+                                input.value = null;
+                            };
+                            input.click();
+                        }
+                        return;
+                    }
+
                     // Save text: Ctrl+S (Windows/Linux) or Cmd+S (Mac)
                     if (modKey && e.key === 's') {
                         e.preventDefault();
