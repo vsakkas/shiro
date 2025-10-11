@@ -444,14 +444,13 @@
             }
 
             updateFade() {
-                console.log('updateFade called');
                 const editor = this.editor;
                 const top = this.fadeTop;
                 const bottom = this.fadeBottom;
                 const { scrollTop, scrollHeight, clientHeight } = editor;
 
                 top.style.opacity = scrollTop > 0 ? '1' : '0';
-                bottom.style.opacity = scrollTop + clientHeight < scrollHeight ? '1' : '0';
+                bottom.style.opacity = Math.ceil(scrollTop + clientHeight) < scrollHeight ? '1' : '0';
             }
 
             // Actions
