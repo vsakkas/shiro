@@ -54,7 +54,7 @@
         #editor,
         .btn,
         #editor::placeholder {
-            transition: background var(--transition), color var(--transition);
+            transition: background var(--transition), color var(--transition), opacity var(--transition);
         }
 
         #count,
@@ -110,9 +110,7 @@
             border: none;
             outline: none;
             resize: none;
-            transition: opacity var(--transition);
             tab-size: 4;
-            box-sizing: border-box;
             caret-color: var(--caret);
         }
 
@@ -130,7 +128,7 @@
             inset-inline: clamp(20px, 10vw, 20vh);
             height: 100px;
             pointer-events: none;
-            transition: opacity 0.3s ease, background-color var(--transition);
+            transition: opacity var(--transition), background-color var(--transition);
             z-index: 1;
             background-color: var(--bg);
         }
@@ -156,8 +154,8 @@
             <span class="btn" data-action="clear">Clear</span>
         </div>
         <div>
-            <span class="btn" data-action="fullscreen">Fullscreen</span>
             <span class="btn" data-action="theme">Light</span>
+            <span class="btn" data-action="fullscreen">Fullscreen</span>
         </div>
     </div>
 
@@ -469,25 +467,16 @@
             // Actions
             download() {
                 const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_' : '-');
-                const blob = new Blob([this.editor.value], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-
-                Object.assign(document.createElement('a'), {
-                    href: url,
-                    download: `shiro_${timestamp}.txt`
-                }).click();
-
-                URL.revokeObjectURL(url);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([this.editor.value], { type: 'text/plain' }));
+                a.download = `shiro_${timestamp}.txt`;
+                a.click();
+                URL.revokeObjectURL(a.href);
             }
 
             clearWithConfirmation() {
-                if (this.editor.value.trim()) {
-                    if (confirm('Are you sure you want to clear all text?')) {
-                        this.clear();
-                    }
-                } else {
-                    this.clear();
-                }
+                if (this.editor.value.trim() && !confirm('Are you sure you want to clear all text?')) return;
+                this.clear();
             }
 
             clear() {
@@ -521,4 +510,5 @@
         new Shiro();
     </script>
 </body>
+
 </html>
