@@ -67,6 +67,7 @@
             justify-content: space-between;
             padding: 18px 20px;
             gap: 20px;
+            transition: opacity var(--transition);
         }
 
         .controls>div {
@@ -86,8 +87,9 @@
             color: var(--hover-accent);
         }
 
-        .controls.hidden .btn {
+        .controls.hidden {
             opacity: 0;
+            pointer-events: none;
         }
 
         main {
