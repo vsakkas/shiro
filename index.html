@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e0e0e0' rx='16'/><text x='50%' y='45%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231e1e1e'>白</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23edece7' rx='16'/><text x='50%' y='47%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%2317140c'>白</text></svg>">
     <title>Shiro</title>
     <meta name="description" content="A clean, distraction-free text editor for focused writing.">
     <script>
@@ -23,22 +23,24 @@
         }
 
         :root {
-            --bg: #130f0c;
-            --text: #dfe4e2;
-            --placeholder: #7b807a;
+            --bg: #17140c;
+            --text: #edece7;
+            --placeholder: rgb(from var(--text) r g b / 0.5);
             --transition: 0.3s ease;
-            --hover-accent: #b9391b;
+            --hover-accent: #c84733;
+            --caret: rgba(from var(--hover-accent) r g b / 0.9);
         }
 
         [data-theme="light"] {
-            --bg: #dfe4e2;
-            --text: #130f0c;
-            --placeholder: #7b807a;
+            --bg: #edece7;
+            --text: #17140c;
+            --placeholder: rgb(from var(--text) r g b / 0.5);
+            --caret: var(--hover-accent);
         }
 
         body {
             margin: 0;
-            font: 18px/1.6 "Monaco", "Courier New", monospace;
+            font: 18px/1.6 "Menlo", "DejaVu Sans Mono", "Consolas", monospace;
             background: var(--bg);
             color: var(--text);
             height: 100vh;
@@ -52,12 +54,12 @@
         #editor,
         .btn,
         #editor::placeholder {
-            transition: background var(--transition), color var(--transition);
+            transition: background var(--transition), color var(--transition), opacity var(--transition);
         }
 
         #count,
         [data-action="theme"] {
-            transition: opacity var(--transition);
+            transition: opacity var(--transition), color var(--transition);
         }
 
         .controls {
@@ -65,6 +67,7 @@
             justify-content: space-between;
             padding: 18px 20px;
             gap: 20px;
+            transition: opacity var(--transition);
         }
 
         .controls>div {
@@ -84,8 +87,9 @@
             color: var(--hover-accent);
         }
 
-        .controls.hidden .btn {
+        .controls.hidden {
             opacity: 0;
+            pointer-events: none;
         }
 
         main {
@@ -108,9 +112,8 @@
             border: none;
             outline: none;
             resize: none;
-            transition: opacity var(--transition);
             tab-size: 4;
-            box-sizing: border-box;
+            caret-color: var(--caret);
         }
 
         #editor::placeholder {
@@ -118,28 +121,30 @@
         }
 
         ::selection {
-            background-color: rgba(185, 57, 27, 0.5);
+            background-color: rgba(from var(--hover-accent) r g b / 0.5);
             color: inherit;
         }
 
         .scroll-fade {
             position: absolute;
-            left: 0;
-            width: 100%;
-            height: 100px;
+            inset-inline: clamp(20px, 10vw, 20vh);
+            height: 80px;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: opacity var(--transition), background-color var(--transition);
             z-index: 1;
+            background-color: var(--bg);
         }
 
         .scroll-fade.top {
             top: 0;
-            background: linear-gradient(to bottom, var(--bg) 50%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
 
         .scroll-fade.bottom {
             bottom: 0;
-            background: linear-gradient(to top, var(--bg) 50%, transparent 100%);
+            mask-image: linear-gradient(to top, black 50%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
         }
     </style>
 </head>
@@ -151,8 +156,8 @@
             <span class="btn" data-action="clear">Clear</span>
         </div>
         <div>
-            <span class="btn" data-action="fullscreen">Fullscreen</span>
             <span class="btn" data-action="theme">Light</span>
+            <span class="btn" data-action="fullscreen">Fullscreen</span>
         </div>
     </div>
 
@@ -199,10 +204,9 @@
 
             init() {
                 this.loadText();
-                this.setTheme(this.theme);
+                this.setTheme(this.theme, { transition: false });
                 this.bindEvents();
                 this.updateCount();
-                this.updateFade();
                 this.editor.focus();
             }
 
@@ -353,7 +357,14 @@
                     this.loadCursorPosition();
                     editor.style.visibility = 'visible';
                     this.updateCount();
+                    // Disable fade transitions until text is loaded to prevent flickering
+                    this.fadeTop.style.transition = 'none';
+                    this.fadeBottom.style.transition = 'none';
                     this.updateFade();
+                    requestAnimationFrame(() => {
+                        this.fadeTop.style.transition = '';
+                        this.fadeBottom.style.transition = '';
+                    });
                 });
             }
 
@@ -431,16 +442,24 @@
                 }
             }
 
-            setTheme(theme = this.theme) {
+            setTheme(theme = this.theme, { transition = true } = {}) {
                 const button = document.querySelector('[data-action="theme"]');
-                button.style.opacity = '0';
-                setTimeout(() => {
+                const apply = () => {
                     document.documentElement.setAttribute('data-theme', theme);
                     button.textContent = theme === 'dark' ? 'Light' : 'Dark';
-                    button.style.opacity = '1';
-                }, 150);
-                localStorage.setItem(SHIRO_THEME, theme);
-                this.theme = theme;
+                    localStorage.setItem(SHIRO_THEME, theme);
+                    this.theme = theme;
+                };
+
+                if (transition) {
+                    button.style.opacity = '0';
+                    setTimeout(() => {
+                        apply();
+                        button.style.opacity = '1';
+                    }, 150);
+                } else {
+                    apply();
+                }
             }
 
             updateFade() {
@@ -456,25 +475,16 @@
             // Actions
             download() {
                 const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_' : '-');
-                const blob = new Blob([this.editor.value], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-
-                Object.assign(document.createElement('a'), {
-                    href: url,
-                    download: `shiro_${timestamp}.txt`
-                }).click();
-
-                URL.revokeObjectURL(url);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([this.editor.value], { type: 'text/plain' }));
+                a.download = `shiro_${timestamp}.txt`;
+                a.click();
+                URL.revokeObjectURL(a.href);
             }
 
             clearWithConfirmation() {
-                if (this.editor.value.trim()) {
-                    if (confirm('Are you sure you want to clear all text?')) {
-                        this.clear();
-                    }
-                } else {
-                    this.clear();
-                }
+                if (this.editor.value.trim() && !confirm('Are you sure you want to clear all text?')) return;
+                this.clear();
             }
 
             clear() {
