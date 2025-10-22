@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23edece7' rx='16'/><text x='50%' y='45%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%2317140c'>白</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23edece7' rx='16'/><text x='50%' y='47%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%2317140c'>白</text></svg>">
     <title>Shiro</title>
     <meta name="description" content="A clean, distraction-free text editor for focused writing.">
     <script>
@@ -128,7 +128,7 @@
         .scroll-fade {
             position: absolute;
             inset-inline: clamp(20px, 10vw, 20vh);
-            height: 100px;
+            height: 80px;
             pointer-events: none;
             transition: opacity var(--transition), background-color var(--transition);
             z-index: 1;
@@ -207,7 +207,6 @@
                 this.setTheme(this.theme, { transition: false });
                 this.bindEvents();
                 this.updateCount();
-                this.updateFade();
                 this.editor.focus();
             }
 
@@ -358,7 +357,14 @@
                     this.loadCursorPosition();
                     editor.style.visibility = 'visible';
                     this.updateCount();
+                    // Disable fade transitions until text is loaded to prevent flickering
+                    this.fadeTop.style.transition = 'none';
+                    this.fadeBottom.style.transition = 'none';
                     this.updateFade();
+                    requestAnimationFrame(() => {
+                        this.fadeTop.style.transition = '';
+                        this.fadeBottom.style.transition = '';
+                    });
                 });
             }
 
