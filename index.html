@@ -287,16 +287,8 @@
                     }
                 });
 
-                // Use scrollend event if supported, otherwise debounce scroll event
-                if ('onscrollend' in this.editor) {
-                    this.editor.addEventListener('scrollend', () => this.updateFade());
-                } else {
-                    let scrollTimeout;
-                    this.editor.addEventListener('scroll', () => {
-                        clearTimeout(scrollTimeout);
-                        scrollTimeout = setTimeout(() => this.updateFade(), 100);
-                    });
-                }
+                // Update text area fade on scroll
+                this.editor.addEventListener('scroll', () => this.updateFade());
 
                 // Always focus on editor on keydown
                 window.addEventListener('keydown', () => {
