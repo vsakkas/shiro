@@ -288,18 +288,14 @@
                 });
 
                 // Update text area fade on scroll
-                this.editor.addEventListener('scroll', () => this.updateFade());
+                this.editor.addEventListener('scroll', () => this.updateFade(), { passive: true });
 
                 // Always focus on editor on keydown
                 window.addEventListener('keydown', () => {
                     this.editor.focus();
                 });
 
-                let resizeTimeout;
-                window.addEventListener('resize', () => {
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(() => this.updateFade(), 150);
-                });
+                window.addEventListener('resize', () => this.updateFade());
 
                 // Control buttons
                 const actions = {
@@ -322,7 +318,7 @@
                 });
 
                 // Show controls on mouse movement
-                document.addEventListener('mousemove', () => this.show());
+                document.addEventListener('mousemove', () => this.show(), { passive: true });
 
                 // Fullscreen change
                 document.addEventListener('fullscreenchange', () => {
