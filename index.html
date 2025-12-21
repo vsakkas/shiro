@@ -43,7 +43,7 @@
             font: 18px/1.6 "Menlo", "DejaVu Sans Mono", "Consolas", monospace;
             background: var(--bg);
             color: var(--text);
-            height: 100vh;
+            height: 100dvh;
             display: grid;
             grid-template-rows: auto 1fr auto;
             transition: background var(--transition);
@@ -53,13 +53,10 @@
         body,
         #editor,
         .btn,
-        #editor::placeholder {
-            transition: background var(--transition), color var(--transition), opacity var(--transition);
-        }
-
+        #editor::placeholder,
         #count,
         [data-action="theme"] {
-            transition: opacity var(--transition), color var(--transition);
+            transition: background var(--transition), color var(--transition), opacity var(--transition);
         }
 
         .controls {
@@ -103,7 +100,7 @@
 
         #editor {
             width: 100%;
-            height: min(80vh, 100%);
+            height: min(80dvh, 100%);
             padding-inline: clamp(20px, 10vw, 20vh);
             padding-block: 2.5vh;
             font: inherit;
@@ -211,6 +208,8 @@
             }
 
             bindEvents() {
+                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
                 // Editor events
                 this.editor.addEventListener('input', () => {
                     this.saveText();
@@ -223,7 +222,6 @@
 
                 // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
-                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
                     const modKey = isMac ? e.metaKey : e.ctrlKey;
 
                     if (e.key === 'Tab' && e.target === this.editor) {
@@ -295,7 +293,7 @@
                     this.editor.focus();
                 });
 
-                window.addEventListener('resize', () => this.updateFade());
+                window.addEventListener('resize', () => this.updateFade(), { passive: true });
 
                 // Control buttons
                 const actions = {
@@ -311,9 +309,9 @@
                     const action = e.target.dataset.action;
                     if (action && actions[action]) {
                         actions[action]();
-                        this.editor.focus();
-                    } else if (e.target !== this.editor) {
-                        this.editor.focus();
+                        if (!('ontouchstart' in window)) {
+                            this.editor.focus();
+                        }
                     }
                 });
 
@@ -426,7 +424,6 @@
                 if (!this.visible) {
                     this.controls.forEach(c => c.classList.remove('hidden'));
                     this.visible = true;
-                    this.updateCount();
                 }
             }
 
@@ -451,13 +448,9 @@
             }
 
             updateFade() {
-                const editor = this.editor;
-                const top = this.fadeTop;
-                const bottom = this.fadeBottom;
-                const { scrollTop, scrollHeight, clientHeight } = editor;
-
-                top.style.opacity = scrollTop > 0 ? '1' : '0';
-                bottom.style.opacity = Math.ceil(scrollTop + clientHeight) < scrollHeight ? '1' : '0';
+                const { scrollTop, scrollHeight, clientHeight } = this.editor;
+                this.fadeTop.style.opacity = scrollTop > 0 ? '1' : '0';
+                this.fadeBottom.style.opacity = Math.ceil(scrollTop + clientHeight) < scrollHeight ? '1' : '0';
             }
 
             // Actions
