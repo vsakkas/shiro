@@ -388,25 +388,41 @@
                 return content.trim().split(/\s+/).filter(Boolean).length;
             }
 
+            getReadingTime(wordCount) {
+                // Average reading speed: 200 words per minute
+                const wordsPerMinute = 200;
+                const minutes = Math.ceil(wordCount / wordsPerMinute);
+
+                if (minutes === 0) {
+                    return '<1 min';
+                } else if (minutes < 60) {
+                    return `~${minutes} min${minutes !== 1 ? 's' : ''}`;
+                } else if (minutes < 1440) {
+                    const hours = Math.ceil(minutes / 60);
+                    return `~${hours} hour${hours !== 1 ? 's' : ''}`;
+                } else {
+                    const days = Math.ceil(minutes / 1440);
+                    return `~${days} day${days !== 1 ? 's' : ''}`;
+                }
+            }
             updateCount() {
                 const text = this.editor.value;
-                let count, label;
+                const wordCount = this.getWordsCount(text);
+                let displayText;
 
                 if (this.countMode === 'words') {
-                    count = this.getWordsCount(text);
-                    label = `word${count !== 1 ? 's' : ''}`;
+                    displayText = `${wordCount} word${wordCount !== 1 ? 's' : ''}`;
                 } else {
-                    count = text.length;
-                    label = `character${count !== 1 ? 's' : ''}`;
+                    displayText = this.getReadingTime(wordCount);
                 }
 
-                this.countDisplay.textContent = `${count} ${label}`;
+                this.countDisplay.textContent = displayText;
             }
 
             toggleCountMode() {
                 this.countDisplay.style.opacity = '0';
                 setTimeout(() => {
-                    this.countMode = this.countMode === 'words' ? 'characters' : 'words';
+                    this.countMode = this.countMode === 'words' ? 'reading' : 'words';
                     localStorage.setItem(SHIRO_COUNT_MODE, this.countMode);
                     this.updateCount();
                     this.countDisplay.style.opacity = '1';
@@ -422,6 +438,7 @@
 
             show() {
                 if (!this.visible) {
+                    this.updateCount();
                     this.controls.forEach(c => c.classList.remove('hidden'));
                     this.visible = true;
                 }
