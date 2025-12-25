@@ -64,12 +64,34 @@
             justify-content: space-between;
             padding: 18px 20px;
             gap: 20px;
-            transition: opacity var(--transition);
+            transition: opacity var(--transition), transform var(--transition);
         }
 
         .controls>div {
             display: flex;
             gap: 20px;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .controls#top.hidden {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            .controls#bottom.hidden {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+        }
+
+        /* Keep controls visible on mobile */
+        @media (hover: none) and (pointer: coarse) {
+
+            .controls#top.hidden,
+            .controls#bottom.hidden {
+                opacity: 1;
+                transform: none;
+            }
         }
 
         .btn {
@@ -134,14 +156,14 @@
 
         .scroll-fade.top {
             top: 0;
-            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 25%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 25%, transparent 100%);
         }
 
         .scroll-fade.bottom {
             bottom: 0;
-            mask-image: linear-gradient(to top, black 50%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+            mask-image: linear-gradient(to top, black 25%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to top, black 25%, transparent 100%);
         }
     </style>
 </head>
@@ -308,10 +330,8 @@
                 document.addEventListener('click', e => {
                     const action = e.target.dataset.action;
                     if (action && actions[action]) {
+                        e.preventDefault();
                         actions[action]();
-                        if (!('ontouchstart' in window)) {
-                            this.editor.focus();
-                        }
                     }
                 });
 
@@ -394,9 +414,9 @@
                 const minutes = Math.ceil(wordCount / wordsPerMinute);
 
                 if (minutes === 0) {
-                    return '<1 min';
+                    return '<1 minute';
                 } else if (minutes < 60) {
-                    return `~${minutes} min${minutes !== 1 ? 's' : ''}`;
+                    return `~${minutes} minute${minutes !== 1 ? 's' : ''}`;
                 } else if (minutes < 1440) {
                     const hours = Math.ceil(minutes / 60);
                     return `~${hours} hour${hours !== 1 ? 's' : ''}`;
