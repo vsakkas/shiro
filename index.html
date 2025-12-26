@@ -255,26 +255,7 @@
                     // Open file: Ctrl+O (Windows/Linux) or Cmd+O (Mac)
                     if (modKey && e.key === 'o') {
                         e.preventDefault();
-                        if (!this.editor.value.trim()) {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = '.txt';
-                            input.onchange = (event) => {
-                                const file = event.target.files[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = () => {
-                                        this.editor.value = reader.result;
-                                        this.saveText();
-                                        this.updateCount();
-                                        this.updateFade();
-                                    };
-                                    reader.readAsText(file);
-                                }
-                                input.value = null;
-                            };
-                            input.click();
-                        }
+                        this.openFile();
                         return;
                     }
 
@@ -305,15 +286,13 @@
                         this.fullscreen();
                         return;
                     }
+
+                    // Focus editor on any other keydown
+                    this.editor.focus();
                 });
 
                 // Update text area fade on scroll
                 this.editor.addEventListener('scroll', () => this.updateFade(), { passive: true });
-
-                // Always focus on editor on keydown
-                window.addEventListener('keydown', () => {
-                    this.editor.focus();
-                });
 
                 window.addEventListener('resize', () => this.updateFade(), { passive: true });
 
@@ -425,6 +404,7 @@
                     return `~${days} day${days !== 1 ? 's' : ''}`;
                 }
             }
+
             updateCount() {
                 const text = this.editor.value;
                 const wordCount = this.getWordsCount(text);
@@ -491,11 +471,35 @@
             }
 
             // Actions
+            openFile() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.txt';
+                input.onchange = (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        if (this.editor.value.trim() && !confirm('Are you sure you want to clear all text and load the selected file?')) {
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            this.editor.value = reader.result;
+                            this.saveText();
+                            this.updateCount();
+                            this.updateFade();
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+                input.remove();
+            }
+
             download() {
-                const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_' : '-');
+                const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_at_' : '-');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([this.editor.value], { type: 'text/plain' }));
-                a.download = `shiro_${timestamp}.txt`;
+                a.download = `shiro_notes_on_${timestamp}.txt`;
                 a.click();
                 URL.revokeObjectURL(a.href);
             }
