@@ -246,6 +246,18 @@
                 document.addEventListener('keydown', (e) => {
                     const modKey = isMac ? e.metaKey : e.ctrlKey;
 
+                    // Smart Enter for lists
+                    if (e.key === 'Enter' && e.target === this.editor) {
+                        this.handleSmartEnter(e);
+                        return;
+                    }
+
+                    // Smart Backspace for removing empty list items
+                    if (e.key === 'Backspace' && e.target === this.editor) {
+                        this.handleSmartBackspace(e);
+                        return;
+                    }
+
                     if (e.key === 'Tab' && e.target === this.editor) {
                         e.preventDefault();
                         document.execCommand('insertText', false, '\t');
@@ -515,6 +527,7 @@
                     this.editor.value = '';
                     this.editor.style.opacity = '1';
                     localStorage.removeItem(SHIRO_SAVED_TEXT);
+                    localStorage.removeItem(SHIRO_CURSOR_POSITION);
                     this.updateCount();
                     this.updateFade();
                 }, 300);
@@ -529,6 +542,78 @@
             toggleTheme() {
                 const newTheme = this.theme === 'dark' ? 'light' : 'dark';
                 this.setTheme(newTheme);
+            }
+
+            handleSmartEnter(e) {
+                const { value, selectionStart } = this.editor;
+                const beforeCursor = value.substring(0, selectionStart);
+                const afterCursor = value.substring(selectionStart);
+
+                // Find current line
+                const lastNewline = beforeCursor.lastIndexOf('\n');
+                const currentLine = beforeCursor.substring(lastNewline + 1);
+
+                // Detect unordereds (-, *)
+                const unorderedMatch = currentLine.match(/^(\s*)([-*])\s+(.*)$/);
+                if (unorderedMatch) {
+                    e.preventDefault();
+                    const [, indent, marker, content] = unorderedMatch;
+
+                    // If the line is empty (just the marker), remove it and dedent
+                    if (!content.trim()) {
+                        const lineStart = lastNewline + 1;
+                        this.editor.setSelectionRange(lineStart, selectionStart);
+                        document.execCommand('delete');
+                        document.execCommand('insertText', false, '');
+                    } else {
+                        // Continue the list
+                        document.execCommand('insertText', false, `\n${indent}${marker} `);
+                    }
+                    return;
+                }
+
+                // Detect ordered lists (1. 2. etc.)
+                const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
+                if (orderedMatch) {
+                    e.preventDefault();
+                    const [, indent, num, content] = orderedMatch;
+
+                    // If the line is empty, remove it and dedent
+                    if (!content.trim()) {
+                        const lineStart = lastNewline + 1;
+                        this.editor.setSelectionRange(lineStart, selectionStart);
+                        document.execCommand('delete');
+                        document.execCommand('insertText', false, '');
+                    } else {
+                        // Continue with next number
+                        const nextNum = parseInt(num) + 1;
+                        document.execCommand('insertText', false, `\n${indent}${nextNum}. `);
+                    }
+                    return;
+                }
+            }
+
+            handleSmartBackspace(e) {
+                const { value, selectionStart, selectionEnd } = this.editor;
+
+                // Only handle if nothing is selected
+                if (selectionStart !== selectionEnd) return;
+
+                const beforeCursor = value.substring(0, selectionStart);
+                const lastNewline = beforeCursor.lastIndexOf('\n');
+                const currentLine = beforeCursor.substring(lastNewline + 1);
+
+                // Check if we're at the end of an empty list item
+                const emptyUnordered = currentLine.match(/^(\s*)([-*])\s*$/);
+                const emptyOrdered = currentLine.match(/^(\s*)(\d+)\.\s*$/);
+
+                if (emptyUnordered || emptyOrdered) {
+                    e.preventDefault();
+                    // Remove the entire list marker line
+                    const lineStart = lastNewline + 1;
+                    this.editor.setSelectionRange(lineStart, selectionStart);
+                    document.execCommand('delete');
+                }
             }
 
             about() {
