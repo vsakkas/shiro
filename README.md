@@ -3,10 +3,10 @@
 A clean, distraction-free text editor for focused writing.
 
 <p align="center">
-  <a href="https://vsakkas.github.io/shiro/">
+  <a href="https://shiroeditor.com/">
     <img src="assets/screenshot_light.png" alt="Shiro Text Editor">
   </a>
-  <a href="https://vsakkas.github.io/shiro/"><b><i>Start writing</i></b></a>
+  <a href="https://shiroeditor.com/"><b><i>Start writing</i></b></a>
 </p>
 
 ## Features
