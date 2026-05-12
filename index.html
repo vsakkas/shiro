@@ -616,29 +616,49 @@
             }
 
             handleSmartTab(e) {
-                const { value, selectionStart } = this.editor;
+                const { value, selectionStart, selectionEnd } = this.editor;
                 const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+
+                // Multi-line selection: indent/dedent every line that is selected
+                if (selectionStart !== selectionEnd) {
+                    e.preventDefault();
+                    const lineEnd = selectionEnd === value.length ? value.length : value.indexOf('\n', selectionEnd - 1);
+                    const block = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
+
+                    const updated = block.split('\n').map(line => {
+                        if (e.shiftKey) return line.replace(/^\t/, '');
+                        return '\t' + line;
+                    }).join('\n');
+
+                    this.editor.setSelectionRange(lineStart, lineEnd === -1 ? value.length : lineEnd);
+                    document.execCommand('insertText', false, updated);
+                    this.editor.setSelectionRange(lineStart, lineStart + updated.length);
+                    return;
+                }
+
                 const lineEnd = value.indexOf('\n', selectionStart);
                 const line = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
-
                 const isList = line.match(/^(\s*)([-*]|\d+\.)\s/);
 
                 e.preventDefault();
-                if (isList && e.shiftKey) {
+                // Plain text: insert tab or no-op on shift
+                if (!isList) {
+                    if (!e.shiftKey) document.execCommand('insertText', false, '\t');
+                    return;
+                }
+
+                // Indent/dedent list items
+                if (e.shiftKey) {
                     const outdented = line.replace(/^\t/, '');
                     if (outdented === line) return;
                     this.editor.setSelectionRange(lineStart, lineStart + line.length);
                     document.execCommand('insertText', false, outdented);
                     this.editor.setSelectionRange(selectionStart - 1, selectionStart - 1);
-                } else if (isList && !e.shiftKey) {
+                } else {
                     this.editor.setSelectionRange(lineStart, lineStart);
                     document.execCommand('insertText', false, '\t');
                     this.editor.setSelectionRange(selectionStart + 1, selectionStart + 1);
-                } else if (!e.shiftKey) {
-                    // Plain text: insert tab
-                    document.execCommand('insertText', false, '\t');
                 }
-                // Shift+Tab on plain text: no-op (but still preventDefault to avoid focus jump)
             }
 
             about() {
