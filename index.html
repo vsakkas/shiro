@@ -259,8 +259,7 @@
                     }
 
                     if (e.key === 'Tab' && e.target === this.editor) {
-                        e.preventDefault();
-                        document.execCommand('insertText', false, '\t');
+                        this.handleSmartTab(e);
                         return;
                     }
 
@@ -614,6 +613,32 @@
                     this.editor.setSelectionRange(lineStart, selectionStart);
                     document.execCommand('delete');
                 }
+            }
+
+            handleSmartTab(e) {
+                const { value, selectionStart } = this.editor;
+                const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+                const lineEnd = value.indexOf('\n', selectionStart);
+                const line = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
+
+                const isList = line.match(/^(\s*)([-*]|\d+\.)\s/);
+
+                e.preventDefault();
+                if (isList && e.shiftKey) {
+                    const outdented = line.replace(/^\t/, '');
+                    if (outdented === line) return;
+                    this.editor.setSelectionRange(lineStart, lineStart + line.length);
+                    document.execCommand('insertText', false, outdented);
+                    this.editor.setSelectionRange(selectionStart - 1, selectionStart - 1);
+                } else if (isList && !e.shiftKey) {
+                    this.editor.setSelectionRange(lineStart, lineStart);
+                    document.execCommand('insertText', false, '\t');
+                    this.editor.setSelectionRange(selectionStart + 1, selectionStart + 1);
+                } else if (!e.shiftKey) {
+                    // Plain text: insert tab
+                    document.execCommand('insertText', false, '\t');
+                }
+                // Shift+Tab on plain text: no-op (but still preventDefault to avoid focus jump)
             }
 
             about() {
