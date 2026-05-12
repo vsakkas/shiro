@@ -544,6 +544,9 @@
             }
 
             handleSmartEnter(e) {
+                // Shift+Enter: insertsa plain newline, breaking out of lists
+                if (e.shiftKey) return;
+
                 const { value, selectionStart } = this.editor;
                 const beforeCursor = value.substring(0, selectionStart);
                 const afterCursor = value.substring(selectionStart);
