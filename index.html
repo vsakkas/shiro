@@ -183,6 +183,32 @@
             mask-image: linear-gradient(to top, black 25%, transparent 100%);
             -webkit-mask-image: linear-gradient(to top, black 25%, transparent 100%);
         }
+
+        #print {
+            display: none;
+        }
+
+        @media print {
+            body {
+                display: block;
+                height: auto;
+                overflow: visible;
+                background: white;
+                color: black;
+            }
+
+            .controls,
+            main {
+                display: none;
+            }
+
+            #print {
+                display: block;
+                white-space: pre-wrap;
+                overflow-wrap: break-word;
+                tab-size: 4;
+            }
+        }
     </style>
 </head>
 
@@ -213,12 +239,17 @@
         </div>
     </div>
 
+    <div id="print"></div>
+
     <script>
         // LocalStorage keys
         const SHIRO_THEME = 'shiroTheme';
         const SHIRO_COUNT_MODE = 'shiroCountMode';
         const SHIRO_SAVED_TEXT = 'shiroSavedText';
         const SHIRO_CURSOR_POSITION = 'shiroCursorPosition';
+
+        // Text file extensions that can be opened
+        const TEXT_FILES = ['.txt', '.md', '.markdown'];
 
         // List item: indent, marker (-, * or 1.) and content
         const LIST_ITEM = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
@@ -231,6 +262,7 @@
                 this.fadeTop = document.querySelector('.scroll-fade.top');
                 this.fadeBottom = document.querySelector('.scroll-fade.bottom');
                 this.themeColor = document.querySelector('meta[name="theme-color"]');
+                this.printView = document.getElementById('print');
 
                 this.theme = document.documentElement.dataset.theme;
                 this.countMode = localStorage.getItem(SHIRO_COUNT_MODE) || 'words';
@@ -359,6 +391,21 @@
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                     if (localStorage.getItem(SHIRO_THEME)) return;
                     this.setTheme(e.matches ? 'dark' : 'light');
+                });
+
+                document.addEventListener('dragover', e => {
+                    if (e.dataTransfer.types.includes('Files')) e.preventDefault();
+                });
+
+                document.addEventListener('drop', e => {
+                    const file = e.dataTransfer.files[0];
+                    if (!file) return;
+                    e.preventDefault();
+                    if (TEXT_FILES.some(ext => file.name.toLowerCase().endsWith(ext))) this.loadFile(file);
+                });
+
+                window.addEventListener('beforeprint', () => {
+                    this.printView.textContent = this.editor.value;
                 });
 
                 // Fullscreen change
@@ -518,25 +565,28 @@
             openFile() {
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.txt';
-                input.onchange = (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        if (this.editor.value.trim() && !confirm('Are you sure you want to clear all text and load the selected file?')) {
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            this.editor.value = reader.result;
-                            this.saveText();
-                            this.updateCount();
-                            this.updateFade();
-                        };
-                        reader.readAsText(file);
-                    }
-                };
+                input.accept = TEXT_FILES.join(',');
+                input.onchange = (event) => this.loadFile(event.target.files[0]);
                 input.click();
                 input.remove();
+            }
+
+            loadFile(file) {
+                if (!file) return;
+                if (this.editor.value.trim() && !confirm('Are you sure you want to clear all text and load the selected file?')) {
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => this.replaceText(reader.result);
+                reader.readAsText(file);
+            }
+
+            // Replace all text in one step, so it can be undone
+            replaceText(text) {
+                this.editor.focus();
+                this.editor.select();
+                document.execCommand('insertText', false, text);
+                this.show();
             }
 
             download() {
@@ -558,12 +608,8 @@
             clear() {
                 this.editor.style.opacity = '0';
                 setTimeout(() => {
-                    this.editor.value = '';
+                    this.replaceText('');
                     this.editor.style.opacity = '1';
-                    localStorage.removeItem(SHIRO_SAVED_TEXT);
-                    localStorage.removeItem(SHIRO_CURSOR_POSITION);
-                    this.updateCount();
-                    this.updateFade();
                 }, 300);
             }
 
