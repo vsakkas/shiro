@@ -216,6 +216,9 @@
         const SHIRO_SAVED_TEXT = 'shiroSavedText';
         const SHIRO_CURSOR_POSITION = 'shiroCursorPosition';
 
+        // List item: indent, marker (-, * or 1.) and content
+        const LIST_ITEM = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
+
         class Shiro {
             constructor() {
                 this.editor = document.getElementById('editor');
@@ -566,55 +569,37 @@
             }
 
             handleSmartEnter(e) {
-                // Shift+Enter: insertsa plain newline, breaking out of lists
+                // Shift+Enter: inserts a plain newline, breaking out of lists
                 if (e.shiftKey) return;
 
-                const { value, selectionStart } = this.editor;
+                const { value, selectionStart, selectionEnd } = this.editor;
                 const beforeCursor = value.substring(0, selectionStart);
-                const afterCursor = value.substring(selectionStart);
+                const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+                const lineEnd = value.indexOf('\n', selectionEnd);
+                const currentLine = beforeCursor.substring(lineStart);
+                const afterCursor = value.substring(selectionEnd, lineEnd === -1 ? value.length : lineEnd);
 
-                // Find current line
-                const lastNewline = beforeCursor.lastIndexOf('\n');
-                const currentLine = beforeCursor.substring(lastNewline + 1);
+                const match = currentLine.match(LIST_ITEM);
+                if (!match) return;
 
-                // Detect unordereds (-, *)
-                const unorderedMatch = currentLine.match(/^(\s*)([-*])\s+(.*)$/);
-                if (unorderedMatch) {
-                    e.preventDefault();
-                    const [, indent, marker, content] = unorderedMatch;
+                e.preventDefault();
+                const [, indent, marker, content] = match;
 
-                    // If the line is empty (just the marker), remove it and dedent
-                    if (!content.trim()) {
-                        const lineStart = lastNewline + 1;
-                        this.editor.setSelectionRange(lineStart, selectionStart);
+                // Empty item: outdent one level, or leave the list when already at the top
+                if (!content.trim() && !afterCursor.trim()) {
+                    const outdented = indent.replace(/^\t/, '');
+                    this.editor.setSelectionRange(lineStart, selectionStart);
+                    if (outdented === indent) {
                         document.execCommand('delete');
-                        document.execCommand('insertText', false, '');
                     } else {
-                        // Continue the list
-                        document.execCommand('insertText', false, `\n${indent}${marker} `);
+                        document.execCommand('insertText', false, `${outdented}${marker} `);
                     }
                     return;
                 }
 
-                // Detect ordered lists (1. 2. etc.)
-                const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
-                if (orderedMatch) {
-                    e.preventDefault();
-                    const [, indent, num, content] = orderedMatch;
-
-                    // If the line is empty, remove it and dedent
-                    if (!content.trim()) {
-                        const lineStart = lastNewline + 1;
-                        this.editor.setSelectionRange(lineStart, selectionStart);
-                        document.execCommand('delete');
-                        document.execCommand('insertText', false, '');
-                    } else {
-                        // Continue with next number
-                        const nextNum = parseInt(num, 10) + 1;
-                        document.execCommand('insertText', false, `\n${indent}${nextNum}. `);
-                    }
-                    return;
-                }
+                // Continue the list with the next marker
+                const nextMarker = marker.endsWith('.') ? `${parseInt(marker, 10) + 1}.` : marker;
+                document.execCommand('insertText', false, `\n${indent}${nextMarker} `);
             }
 
             handleSmartBackspace(e) {
@@ -627,17 +612,15 @@
                 const lastNewline = beforeCursor.lastIndexOf('\n');
                 const currentLine = beforeCursor.substring(lastNewline + 1);
 
-                // Check if we're at the end of an empty list item
-                const emptyUnordered = currentLine.match(/^(\s*)([-*])\s*$/);
-                const emptyOrdered = currentLine.match(/^(\s*)(\d+)\.\s*$/);
+                // Empty item: only a marker with its trailing space, nothing typed yet
+                const match = currentLine.match(LIST_ITEM);
+                if (!match || match[3].trim()) return;
 
-                if (emptyUnordered || emptyOrdered) {
-                    e.preventDefault();
-                    // Remove the entire list marker line
-                    const lineStart = lastNewline + 1;
-                    this.editor.setSelectionRange(lineStart, selectionStart);
-                    document.execCommand('delete');
-                }
+                e.preventDefault();
+                // Remove the list marker
+                const lineStart = lastNewline + 1;
+                this.editor.setSelectionRange(lineStart, selectionStart);
+                document.execCommand('delete');
             }
 
             handleSmartTab(e) {
@@ -663,7 +646,7 @@
 
                 const lineEnd = value.indexOf('\n', selectionStart);
                 const line = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
-                const isList = line.match(/^(\s*)([-*]|\d+\.)\s/);
+                const isList = LIST_ITEM.test(line);
 
                 e.preventDefault();
                 // Plain text: insert tab or no-op on shift
@@ -678,7 +661,8 @@
                     if (outdented === line) return;
                     this.editor.setSelectionRange(lineStart, lineStart + line.length);
                     document.execCommand('insertText', false, outdented);
-                    this.editor.setSelectionRange(selectionStart - 1, selectionStart - 1);
+                    const caret = Math.max(lineStart, selectionStart - 1);
+                    this.editor.setSelectionRange(caret, caret);
                 } else {
                     this.editor.setSelectionRange(lineStart, lineStart);
                     document.execCommand('insertText', false, '\t');
