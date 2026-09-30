@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f9f7f3' rx='16'/><text x='50%' y='47%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231b1613'>白</text></svg>">
     <title>Shiro</title>
@@ -30,6 +30,8 @@
             --transition: 0.3s ease;
             --hover-accent: #d45f46;
             --caret: rgba(from var(--hover-accent) r g b / 0.9);
+            --line-length: 80ch;
+            --gutter: max(clamp(16px, 4vw, 48px), (100% - var(--line-length)) / 2);
             color-scheme: dark;
         }
 
@@ -86,11 +88,11 @@
 
         /* Keep controls visible on mobile */
         @media (hover: none) and (pointer: coarse) {
-
             .controls#top.hidden,
             .controls#bottom.hidden {
                 opacity: 1;
                 transform: none;
+                pointer-events: auto;
             }
         }
 
@@ -110,15 +112,18 @@
             font-size: 15px;
             transition: opacity var(--transition), color var(--transition);
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
             color: rgb(from var(--text) r g b / 0.6);
         }
 
-        .btn:hover,
-        .btn:focus-visible {
-            color: var(--hover-accent);
+        @media (hover: hover) {
+            .btn:hover {
+                color: var(--hover-accent);
+            }
         }
 
         .btn:focus-visible {
+            color: var(--hover-accent);
             outline: none;
             text-decoration: underline;
             text-underline-offset: 4px;
@@ -141,7 +146,7 @@
         #editor {
             width: 100%;
             height: min(80dvh, 100%);
-            padding-inline: clamp(20px, 10vw, 20vh);
+            padding-inline: var(--gutter);
             padding-block: 2.5vh;
             font: inherit;
             background: transparent;
@@ -164,7 +169,7 @@
 
         .scroll-fade {
             position: absolute;
-            inset-inline: clamp(20px, 10vw, 20vh);
+            inset-inline: var(--gutter);
             height: 80px;
             pointer-events: none;
             transition: opacity var(--transition), background-color var(--transition);
@@ -253,6 +258,9 @@
 
         // List item: indent, marker (-, * or 1.) and content
         const LIST_ITEM = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
+
+        // One indent level: a tab or up to 4 spaces, matching tab-size
+        const INDENT = /^(\t| {1,4})/;
 
         class Shiro {
             constructor() {
@@ -375,12 +383,16 @@
                     count: () => this.toggleCountMode()
                 };
 
+                // Keep focus where it is, so tapping a control doesn't open the on-screen keyboard
+                document.addEventListener('mousedown', e => {
+                    if (e.target.dataset.action) e.preventDefault();
+                });
+
                 document.addEventListener('click', e => {
                     const action = e.target.dataset.action;
                     if (action && actions[action]) {
                         e.preventDefault();
                         actions[action]();
-                        this.editor.focus({ preventScroll: true });
                     }
                 });
 
@@ -644,7 +656,7 @@
 
                 // Empty item: outdent one level, or leave the list when already at the top
                 if (!content.trim() && !afterCursor.trim()) {
-                    const outdented = indent.replace(/^\t/, '');
+                    const outdented = indent.replace(INDENT, '');
                     this.editor.setSelectionRange(lineStart, selectionStart);
                     if (outdented === indent) {
                         document.execCommand('delete');
@@ -691,7 +703,7 @@
                     const block = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
 
                     const updated = block.split('\n').map(line => {
-                        if (e.shiftKey) return line.replace(/^\t/, '');
+                        if (e.shiftKey) return line.replace(INDENT, '');
                         return '\t' + line;
                     }).join('\n');
 
@@ -714,11 +726,11 @@
 
                 // Indent/dedent list items
                 if (e.shiftKey) {
-                    const outdented = line.replace(/^\t/, '');
+                    const outdented = line.replace(INDENT, '');
                     if (outdented === line) return;
                     this.editor.setSelectionRange(lineStart, lineStart + line.length);
                     document.execCommand('insertText', false, outdented);
-                    const caret = Math.max(lineStart, selectionStart - 1);
+                    const caret = Math.max(lineStart, selectionStart - (line.length - outdented.length));
                     this.editor.setSelectionRange(caret, caret);
                 } else {
                     this.editor.setSelectionRange(lineStart, lineStart);
