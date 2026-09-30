@@ -46,16 +46,12 @@
             height: 100dvh;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            transition: background var(--transition);
             overflow: hidden;
         }
 
         body,
         #editor,
-        .btn,
-        #editor::placeholder,
-        #count,
-        [data-action="theme"] {
+        #editor::placeholder {
             transition: background var(--transition), color var(--transition), opacity var(--transition);
         }
 
@@ -94,7 +90,18 @@
             }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            .controls#top.hidden,
+            .controls#bottom.hidden {
+                transform: none;
+            }
+        }
+
         .btn {
+            padding: 0;
+            border: none;
+            background: none;
+            font: inherit;
             cursor: pointer;
             font-size: 15px;
             transition: opacity var(--transition), color var(--transition);
@@ -102,8 +109,15 @@
             color: rgb(from var(--text) r g b / 0.6);
         }
 
-        .btn:hover {
+        .btn:hover,
+        .btn:focus-visible {
             color: var(--hover-accent);
+        }
+
+        .btn:focus-visible {
+            outline: none;
+            text-decoration: underline;
+            text-underline-offset: 4px;
         }
 
         .controls.hidden {
@@ -171,27 +185,27 @@
 <body>
     <div class="controls" id="top">
         <div>
-            <span class="btn" data-action="download">Download</span>
-            <span class="btn" data-action="clear">Clear</span>
+            <button type="button" class="btn" data-action="download">Download</button>
+            <button type="button" class="btn" data-action="clear">Clear</button>
         </div>
         <div>
-            <span class="btn" data-action="theme">Light</span>
-            <span class="btn" data-action="fullscreen">Fullscreen</span>
+            <button type="button" class="btn" data-action="theme">Light</button>
+            <button type="button" class="btn" data-action="fullscreen">Fullscreen</button>
         </div>
     </div>
 
     <main>
         <div class="scroll-fade top"></div>
-        <textarea id="editor" placeholder="Start writing..."></textarea>
+        <textarea id="editor" placeholder="Start writing..." aria-label="Writing area"></textarea>
         <div class="scroll-fade bottom"></div>
     </main>
 
     <div class="controls" id="bottom">
         <div>
-            <span class="btn" data-action="about">About</span>
+            <button type="button" class="btn" data-action="about">About</button>
         </div>
         <div>
-            <span class="btn" id="count" data-action="count">0 words</span>
+            <button type="button" class="btn" id="count" data-action="count">0 words</button>
         </div>
     </div>
 
@@ -230,7 +244,7 @@
             }
 
             bindEvents() {
-                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
                 // Editor events
                 this.editor.addEventListener('input', () => {
@@ -244,7 +258,12 @@
 
                 // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
+                    // Let IME composition finish; Safari reports keyCode 229 on the confirming Enter
+                    if (e.isComposing || e.keyCode === 229) return;
+
                     const modKey = isMac ? e.metaKey : e.ctrlKey;
+                    // Fall back to the physical key on non-Latin layouts
+                    const key = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() : e.code.replace('Key', '').toLowerCase();
 
                     // Smart Enter for lists
                     if (e.key === 'Enter' && e.target === this.editor) {
@@ -264,35 +283,35 @@
                     }
 
                     // Open file: Ctrl+O (Windows/Linux) or Cmd+O (Mac)
-                    if (modKey && e.key === 'o') {
+                    if (modKey && key === 'o') {
                         e.preventDefault();
                         this.openFile();
                         return;
                     }
 
                     // Save text: Ctrl+S (Windows/Linux) or Cmd+S (Mac)
-                    if (modKey && e.key === 's') {
+                    if (modKey && key === 's') {
                         e.preventDefault();
                         this.download();
                         return;
                     }
 
                     // Clear text: Ctrl+K (Windows/Linux) or Cmd+K (Mac)
-                    if (modKey && e.key === 'k') {
+                    if (modKey && key === 'k') {
                         e.preventDefault();
                         this.clearWithConfirmation();
                         return;
                     }
 
                     // Theme toggle: Shift+Ctrl+T (Windows/Linux) or Shift+Cmd+T (Mac)
-                    if (modKey && e.shiftKey && e.key === 'T') {
+                    if (modKey && e.shiftKey && key === 't') {
                         e.preventDefault();
                         this.toggleTheme();
                         return;
                     }
 
                     // Fullscreen toggle: Shift+Ctrl+F (Windows/Linux) or Shift+Cmd+F (Mac)
-                    if (modKey && e.shiftKey && e.key === 'F') {
+                    if (modKey && e.shiftKey && key === 'f') {
                         e.preventDefault();
                         this.fullscreen();
                         return;
@@ -322,6 +341,7 @@
                     if (action && actions[action]) {
                         e.preventDefault();
                         actions[action]();
+                        this.editor.focus({ preventScroll: true });
                     }
                 });
 
@@ -371,7 +391,7 @@
             loadCursorPosition() {
                 const saved = localStorage.getItem(SHIRO_CURSOR_POSITION);
                 if (saved) {
-                    const position = parseInt(saved);
+                    const position = parseInt(saved, 10);
                     const editor = this.editor;
                     requestAnimationFrame(() => {
                         editor.setSelectionRange(position, position);
@@ -507,7 +527,9 @@
             }
 
             download() {
-                const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, m => m === 'T' ? '_at_' : '-');
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_at_${pad(now.getHours())}-${pad(now.getMinutes())}`;
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([this.editor.value], { type: 'text/plain' }));
                 a.download = `shiro_notes_on_${timestamp}.txt`;
@@ -588,7 +610,7 @@
                         document.execCommand('insertText', false, '');
                     } else {
                         // Continue with next number
-                        const nextNum = parseInt(num) + 1;
+                        const nextNum = parseInt(num, 10) + 1;
                         document.execCommand('insertText', false, `\n${indent}${nextNum}. `);
                     }
                     return;
@@ -665,7 +687,7 @@
             }
 
             about() {
-                window.open('https://github.com/vsakkas/shiro', '_blank');
+                window.open('https://github.com/vsakkas/shiro', '_blank', 'noopener');
             }
         }
 
