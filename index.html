@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23edece7' rx='16'/><text x='50%' y='47%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%2317140c'>白</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f9f7f3' rx='16'/><text x='50%' y='47%' dominant-baseline='central' text-anchor='middle' font-size='85' font-family='Arial' font-weight='bold' fill='%231b1613'>白</text></svg>">
     <title>Shiro</title>
     <meta name="description" content="A clean, distraction-free text editor for focused writing.">
+    <meta name="theme-color">
     <script>
         // Set theme before CSS is applied to avoid screen flashing
         (function () {
@@ -23,19 +24,22 @@
         }
 
         :root {
-            --bg: #17140c;
-            --text: #edece7;
-            --placeholder: rgb(from var(--text) r g b / 0.5);
+            --bg: #100b08;
+            --text: #e7e4e0;
+            --placeholder: #857f7b;
             --transition: 0.3s ease;
-            --hover-accent: #c84733;
+            --hover-accent: #d45f46;
             --caret: rgba(from var(--hover-accent) r g b / 0.9);
+            color-scheme: dark;
         }
 
         [data-theme="light"] {
-            --bg: #edece7;
-            --text: #17140c;
-            --placeholder: rgb(from var(--text) r g b / 0.5);
+            --bg: #f9f7f3;
+            --text: #1b1613;
+            --placeholder: #69625d;
+            --hover-accent: #bd4d34;
             --caret: var(--hover-accent);
+            color-scheme: light;
         }
 
         body {
@@ -47,9 +51,9 @@
             display: grid;
             grid-template-rows: auto 1fr auto;
             overflow: hidden;
+            transition: background var(--transition);
         }
 
-        body,
         #editor,
         #editor::placeholder {
             transition: background var(--transition), color var(--transition), opacity var(--transition);
@@ -226,9 +230,9 @@
                 this.countDisplay = document.getElementById('count');
                 this.fadeTop = document.querySelector('.scroll-fade.top');
                 this.fadeBottom = document.querySelector('.scroll-fade.bottom');
+                this.themeColor = document.querySelector('meta[name="theme-color"]');
 
-                this.theme = localStorage.getItem(SHIRO_THEME) ||
-                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                this.theme = document.documentElement.dataset.theme;
                 this.countMode = localStorage.getItem(SHIRO_COUNT_MODE) || 'words';
                 this.segmenter = typeof Intl.Segmenter === "function"
                     ? new Intl.Segmenter(navigator.language, { granularity: "word" })
@@ -350,6 +354,12 @@
 
                 // Show controls on mouse movement
                 document.addEventListener('mousemove', () => this.show(), { passive: true });
+
+                // Follow system theme changes until a theme is picked
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if (localStorage.getItem(SHIRO_THEME)) return;
+                    this.setTheme(e.matches ? 'dark' : 'light');
+                });
 
                 // Fullscreen change
                 document.addEventListener('fullscreenchange', () => {
@@ -483,7 +493,7 @@
                 const apply = () => {
                     document.documentElement.setAttribute('data-theme', theme);
                     button.textContent = theme === 'dark' ? 'Light' : 'Dark';
-                    localStorage.setItem(SHIRO_THEME, theme);
+                    this.themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
                     this.theme = theme;
                 };
 
@@ -565,6 +575,7 @@
 
             toggleTheme() {
                 const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem(SHIRO_THEME, newTheme);
                 this.setTheme(newTheme);
             }
 
