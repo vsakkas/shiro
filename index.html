@@ -271,6 +271,7 @@
                 this.fadeBottom = document.querySelector('.scroll-fade.bottom');
                 this.themeColor = document.querySelector('meta[name="theme-color"]');
                 this.printView = document.getElementById('print');
+                this.touch = window.matchMedia('(hover: none) and (pointer: coarse)');
 
                 this.theme = document.documentElement.dataset.theme;
                 this.countMode = localStorage.getItem(SHIRO_COUNT_MODE) || 'words';
@@ -420,15 +421,24 @@
                     this.printView.textContent = this.editor.value;
                 });
 
-                // Fullscreen change
+                // Fullscreen change, hiding the button where fullscreen isn't supported
+                const fullscreenButton = document.querySelector('[data-action="fullscreen"]');
+                fullscreenButton.hidden = !document.fullscreenEnabled;
                 document.addEventListener('fullscreenchange', () => {
-                    const btn = document.querySelector('[data-action="fullscreen"]');
-                    btn.textContent = document.fullscreenElement ? 'Normal' : 'Fullscreen';
+                    fullscreenButton.textContent = document.fullscreenElement ? 'Normal' : 'Fullscreen';
                 });
 
                 // Save cursor position when it moves
                 this.editor.addEventListener('selectionchange', () => {
                     this.saveCursorPosition();
+                });
+
+                // Count selected words, skipping plain caret moves while typing
+                document.addEventListener('selectionchange', () => {
+                    const { selectionStart, selectionEnd } = this.editor;
+                    const hasSelection = selectionStart !== selectionEnd;
+                    if (this.visible && (hasSelection || this.hasSelection)) this.updateCount();
+                    this.hasSelection = hasSelection;
                 });
             }
 
@@ -509,12 +519,16 @@
             }
 
             updateCount() {
-                const text = this.editor.value;
-                const wordCount = this.getWordsCount(text);
+                const { value, selectionStart, selectionEnd } = this.editor;
+                const wordCount = this.getWordsCount(value);
                 let displayText;
 
                 if (this.countMode === 'words') {
-                    displayText = `${wordCount} word${wordCount !== 1 ? 's' : ''}`;
+                    displayText = `${wordCount.toLocaleString()} word${wordCount !== 1 ? 's' : ''}`;
+                    if (selectionStart !== selectionEnd) {
+                        const selectedCount = this.getWordsCount(value.substring(selectionStart, selectionEnd));
+                        displayText = `${selectedCount.toLocaleString()} of ${displayText}`;
+                    }
                 } else {
                     displayText = this.getReadingTime(wordCount);
                 }
@@ -533,7 +547,7 @@
             }
 
             hide() {
-                if (this.visible) {
+                if (this.visible && !this.touch.matches) {
                     this.controls.forEach(c => c.classList.add('hidden'));
                     this.visible = false;
                 }
