@@ -220,7 +220,7 @@
 <body>
     <div class="controls" id="top">
         <div>
-            <button type="button" class="btn" data-action="download">Download</button>
+            <button type="button" class="btn" id="file" data-action="download">Download</button>
             <button type="button" class="btn" data-action="clear">Clear</button>
         </div>
         <div>
@@ -253,8 +253,8 @@
         const SHIRO_SAVED_TEXT = 'shiroSavedText';
         const SHIRO_CURSOR_POSITION = 'shiroCursorPosition';
 
-        // Text file extensions that can be opened
-        const TEXT_FILES = ['.txt', '.md', '.markdown'];
+        // Text file types and extensions that can be opened
+        const TEXT_FILES = ['text/*', '.txt', '.md', '.markdown'];
 
         // List item: indent, marker (-, * or 1.) and content
         const LIST_ITEM = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
@@ -267,6 +267,7 @@
                 this.editor = document.getElementById('editor');
                 this.controls = document.querySelectorAll('.controls');
                 this.countDisplay = document.getElementById('count');
+                this.fileButton = document.getElementById('file');
                 this.fadeTop = document.querySelector('.scroll-fade.top');
                 this.fadeBottom = document.querySelector('.scroll-fade.bottom');
                 this.themeColor = document.querySelector('meta[name="theme-color"]');
@@ -279,6 +280,7 @@
                     ? new Intl.Segmenter(navigator.language, { granularity: "word" })
                     : null;
                 this.visible = true;
+                this.duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--transition')) * 1000;
 
                 this.init();
             }
@@ -286,6 +288,7 @@
             init() {
                 this.loadText();
                 this.setTheme(this.theme, { transition: false });
+                this.updateFileButton({ transition: false });
                 this.bindEvents();
                 this.updateCount();
                 this.editor.focus();
@@ -301,6 +304,7 @@
                         this.updateCount();
                     }
                     this.hide();
+                    this.updateFileButton();
                     this.updateFade();
                 });
 
@@ -376,6 +380,7 @@
 
                 // Control buttons
                 const actions = {
+                    open: () => this.openFile(),
                     download: () => this.download(),
                     clear: () => this.clearWithConfirmation(),
                     fullscreen: () => this.fullscreen(),
@@ -414,7 +419,7 @@
                     const file = e.dataTransfer.files[0];
                     if (!file) return;
                     e.preventDefault();
-                    if (TEXT_FILES.some(ext => file.name.toLowerCase().endsWith(ext))) this.loadFile(file);
+                    if (file.type.startsWith('text/') || TEXT_FILES.some(ext => file.name.toLowerCase().endsWith(ext))) this.loadFile(file);
                 });
 
                 window.addEventListener('beforeprint', () => {
@@ -537,13 +542,31 @@
             }
 
             toggleCountMode() {
-                this.countDisplay.style.opacity = '0';
-                setTimeout(() => {
+                this.fade(this.countDisplay, () => {
                     this.countMode = this.countMode === 'words' ? 'reading' : 'words';
                     localStorage.setItem(SHIRO_COUNT_MODE, this.countMode);
                     this.updateCount();
-                    this.countDisplay.style.opacity = '1';
-                }, 150);
+                });
+            }
+
+            // Show Open when editor is empty and Download otherwise
+            updateFileButton(options) {
+                const action = this.editor.value.trim() ? 'download' : 'open';
+                if (this.fileButton.dataset.action === action) return;
+                this.fileButton.dataset.action = action;
+                this.fade(this.fileButton, () => {
+                    this.fileButton.textContent = action === 'open' ? 'Open' : 'Download';
+                }, options);
+            }
+
+            // Fade an element out, change it, then fade it back in
+            fade(element, change, { transition = true } = {}) {
+                if (!transition) return change();
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    change();
+                    element.style.opacity = '1';
+                }, this.duration / 2);
             }
 
             hide() {
@@ -563,28 +586,20 @@
 
             setTheme(theme = this.theme, { transition = true } = {}) {
                 const button = document.querySelector('[data-action="theme"]');
-                const apply = () => {
+                this.fade(button, () => {
                     document.documentElement.setAttribute('data-theme', theme);
                     button.textContent = theme === 'dark' ? 'Light' : 'Dark';
                     this.themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
                     this.theme = theme;
-                };
-
-                if (transition) {
-                    button.style.opacity = '0';
-                    setTimeout(() => {
-                        apply();
-                        button.style.opacity = '1';
-                    }, 150);
-                } else {
-                    apply();
-                }
+                }, { transition });
             }
 
             updateFade() {
                 const { scrollTop, scrollHeight, clientHeight } = this.editor;
+                const { paddingBottom, lineHeight } = getComputedStyle(this.editor);
+                const hiddenBelow = scrollHeight - parseFloat(paddingBottom) - (scrollTop + clientHeight);
                 this.fadeTop.style.opacity = scrollTop > 0 ? '1' : '0';
-                this.fadeBottom.style.opacity = Math.ceil(scrollTop + clientHeight) < scrollHeight ? '1' : '0';
+                this.fadeBottom.style.opacity = hiddenBelow > parseFloat(lineHeight) / 2 ? '1' : '0';
             }
 
             // Actions
@@ -636,7 +651,7 @@
                 setTimeout(() => {
                     this.replaceText('');
                     this.editor.style.opacity = '1';
-                }, 300);
+                }, this.duration);
             }
 
             fullscreen() {
